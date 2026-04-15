@@ -1,45 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
-    <!-- 사이드바 임시 (나중에 레이아웃으로 분리 가능) -->
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div class="p-6 border-b border-gray-100">
-        <h2 class="font-bold text-lg text-gray-800 flex items-center gap-2">
-          <span class="p-1.5 bg-blue-600 rounded-lg text-white">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-          </span>
-          동행빌리지
-        </h2>
-      </div>
-      <div class="p-4 flex-1">
-        <p class="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wider">메뉴</p>
-        <div class="space-y-1">
-          <button class="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium bg-blue-50 text-blue-700">📊 대시보드</button>
-          <!-- 추가 메뉴 템플릿 -->
-          <!-- <button class="w-full text-left px-3 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-50">📥 문서 접수</button> -->
-        </div>
-      </div>
-      <div class="p-4 border-t border-gray-100">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex justify-center items-center font-bold text-sm">
-            {{ userInitial }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 truncate">{{ authStore.profile?.name || '로딩중...' }}</p>
-            <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
-          </div>
-        </div>
-        <button @click="handleLogout" class="w-full border border-gray-200 text-gray-600 rounded-xl py-2 text-sm font-medium hover:bg-gray-50 transition">
-          로그아웃
-        </button>
-      </div>
-    </aside>
-
-    <!-- 메인 컨텐츠 영역 -->
-    <main class="flex-1 p-8">
-      <header class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">대시보드</h1>
-        <p class="text-sm text-gray-500 mt-1">오늘의 공문서 현황을 확인하세요.</p>
-      </header>
+  <div class="p-8">
+    <header class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900">대시보드</h1>
+      <p class="text-sm text-gray-500 mt-1">오늘의 공문서 현황을 확인하세요.</p>
+    </header>
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <!-- Stat Cards -->
@@ -91,7 +55,6 @@
           </tbody>
         </table>
       </div>
-    </main>
   </div>
 </template>
 
