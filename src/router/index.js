@@ -8,9 +8,11 @@ import Receive from '../views/docs/Receive.vue'
 import Assign from '../views/docs/Assign.vue'
 import MyDocs from '../views/docs/MyDocs.vue'
 import Search from '../views/Search.vue'
+import SetupWizard from '../views/SetupWizard.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: Login },
+  { path: '/setup', name: 'Setup', component: SetupWizard, meta: { requiresAuth: true, adminOnly: true } },
   { 
     path: '/', 
     component: MainLayout, 

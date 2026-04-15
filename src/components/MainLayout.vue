@@ -7,7 +7,7 @@
           <span class="p-1.5 bg-blue-600 rounded-lg text-white">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           </span>
-          동행빌리지
+          {{ displayOrgName }}
         </h2>
       </div>
       
@@ -48,10 +48,16 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useSettingsStore } from '../store/settings'
 
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const router = useRouter()
 const route = useRoute()
+
+const displayOrgName = computed(() => {
+  return settingsStore.orgName || '공문서 관리'
+})
 
 const menus = [
   { path: '/', name: '대시보드', icon: '📊', roles: ['admin', 'receiver', 'reviewer', 'user'] },

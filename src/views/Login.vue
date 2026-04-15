@@ -5,7 +5,7 @@
         <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         </div>
-        <h1 class="text-2xl font-bold tracking-tight">동행빌리지 공문서 관리</h1>
+        <h1 class="text-2xl font-bold tracking-tight">{{ displayTitle }}</h1>
         <p class="text-sm text-gray-500 mt-2">관리자 및 내부 승인 허가 시스템</p>
       </div>
 
@@ -17,7 +17,7 @@
             type="email" 
             required 
             class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" 
-            placeholder="admin@together63.kr" 
+            placeholder="이메일을 입력하세요" 
           />
         </div>
         <div>
@@ -49,9 +49,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useSettingsStore } from '../store/settings'
 
 const email = ref('')
 const password = ref('')
@@ -59,13 +60,21 @@ const errorMsg = ref('')
 const loading = ref(false)
 
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const router = useRouter()
+
+const displayTitle = computed(() => {
+  const orgName = settingsStore.orgName
+  return orgName ? `${orgName} 공문서 관리` : '공문서 관리 시스템'
+})
 
 const handleLogin = async () => {
   loading.value = true
   errorMsg.value = ''
   try {
     await authStore.login(email.value, password.value)
+    // 로그인 후 설정 로드
+    await settingsStore.loadSettings()
     router.push('/')
   } catch (error) {
     console.error(error)
