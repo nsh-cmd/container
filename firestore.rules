@@ -1,8 +1,73 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // 사용자 역할 확인 함수
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return getUserRole() == 'admin';
+    }
+    
+    function isReceiver() {
+      return getUserRole() == 'receiver';
+    }
+    
+    function isReviewer() {
+      return getUserRole() == 'reviewer' || isAdmin();
+    }
+
+    // users 컬렉션 
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow write: if isAdmin() || request.auth.token.email == 'admin@together63.kr';
+    }
+
+    // settings 컬렉션 - 모든 로그인 사용자 읽기, 관리자만 쓰기
+    match /settings/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // documents 컬렉션 - 접수된 공문 관리
+    match /documents/{docId} {
+      allow read: if request.auth != null && 
+        (isReceiver() || 
+         isAdmin() || 
+         isReviewer() || 
+         request.auth.email in resource.data.assigneeEmails);
+
+      allow create: if request.auth != null && 
+        (isReceiver() || isAdmin()) &&
+        request.resource.data.receiptUserEmail == request.auth.email &&
+        request.resource.data.receiptDate != null &&
+        request.resource.data.title != null;
+
+      allow update: if request.auth != null && 
+        (isReceiver() || isAdmin()) &&
+        resource.data.receiptUserEmail == request.auth.email;
+
+      allow delete: if isAdmin();
+    }
+
+    // reviewHistory 서브컬렉션 - 검토 기록
+    match /documents/{docId}/reviewHistory/{historyId} {
+      allow read: if request.auth != null &&
+        (isReceiver() || 
+         isAdmin() || 
+         isReviewer());
+
+      allow create: if request.auth != null &&
+        request.resource.data.reviewerEmail == request.auth.email;
+
+      allow delete: if isAdmin();
+    }
+
+    // 기타 미정의 경로는 모두 거부
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
