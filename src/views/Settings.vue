@@ -93,11 +93,21 @@
             <li>생성된 웹앱 URL을 아래에 입력</li>
           </ol>
         </div>
-        <div class="p-6">
-          <label class="text-xs font-semibold text-gray-600 block mb-1">Apps Script 웹앱 URL</label>
-          <div class="flex gap-2">
-            <input v-model="appsScriptUrl" class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="https://script.google.com/macros/s/.../exec">
-            <button @click="saveAppsScript" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">저장</button>
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="text-xs font-semibold text-gray-600 block mb-1">Google Drive 첨부파일 폴더 ID</label>
+            <div class="flex gap-2">
+              <input v-model="driveFolderId" class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="예: 1aBcDeFgHiJkLmNoPqRsTuVwXyZ">
+              <button @click="saveDriveFolderId" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">저장</button>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-1">Google Drive 폴더 URL에서 folders/ 뒤의 문자열을 입력하세요.</p>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600 block mb-1">Apps Script 웹앱 URL</label>
+            <div class="flex gap-2">
+              <input v-model="appsScriptUrl" class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="https://script.google.com/macros/s/.../exec">
+              <button @click="saveAppsScript" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">저장</button>
+            </div>
           </div>
         </div>
       </section>
@@ -184,6 +194,7 @@ const orgName = ref('')
 const facilityType = ref('')
 const slackWebhookUrl = ref('')
 const appsScriptUrl = ref('')
+const driveFolderId = ref('')
 const testingSlack = ref(false)
 const slackTestResult = ref(null)
 
@@ -214,6 +225,7 @@ const loadSettings = async () => {
       facilityType.value = data.facilityType || ''
       slackWebhookUrl.value = data.slackWebhookUrl || ''
       appsScriptUrl.value = data.appsScriptUrl || ''
+      driveFolderId.value = data.driveFolderId || ''
     }
 
     const catSnap = await getDoc(doc(db, 'settings', 'categories'))
@@ -284,6 +296,18 @@ const saveAppsScript = async () => {
   })
   await settingsStore.loadSettings()
   alert('Apps Script URL 저장 완료')
+}
+
+const saveDriveFolderId = async () => {
+  const orgRef = doc(db, 'settings', 'orgInfo')
+  const snap = await getDoc(orgRef)
+  const existing = snap.exists() ? snap.data() : {}
+  await setDoc(orgRef, {
+    ...existing,
+    driveFolderId: driveFolderId.value.trim()
+  })
+  await settingsStore.loadSettings()
+  alert('Drive 폴더 ID 저장 완료')
 }
 
 const addCategory = () => {

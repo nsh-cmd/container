@@ -8,6 +8,7 @@ export const useSettingsStore = defineStore('settings', {
     facilityType: '',
     slackWebhookUrl: '',
     appsScriptUrl: '',
+    driveFolderId: '',
     isInitialized: false,
     isLoaded: false
   }),
@@ -21,6 +22,7 @@ export const useSettingsStore = defineStore('settings', {
           this.facilityType = data.facilityType || ''
           this.slackWebhookUrl = data.slackWebhookUrl || ''
           this.appsScriptUrl = data.appsScriptUrl || ''
+          this.driveFolderId = data.driveFolderId || ''
           this.isInitialized = data.isInitialized || false
         }
       } catch (e) {

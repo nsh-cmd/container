@@ -12,6 +12,74 @@
 
       <div class="space-y-6">
 
+        <!-- 0. Firebase 연결 확인 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
+            <h2 class="font-bold text-gray-800">🔥 Firebase 연결 설정</h2>
+            <button @click="toggleGuide('firebase')" class="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 transition">
+              📖 <span>{{ guideOpen.firebase ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
+            </button>
+          </div>
+          <div v-if="guideOpen.firebase" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
+            <p class="font-semibold">📋 Firebase 설정 안내</p>
+            <ol class="list-decimal list-inside space-y-1 text-blue-700">
+              <li><a href="https://console.firebase.google.com" target="_blank" class="underline font-semibold">Firebase Console</a>에 접속 → 프로젝트 선택 또는 새 프로젝트 생성</li>
+              <li>좌측 메뉴 <strong>프로젝트 설정</strong>(⚙️) → <strong>일반</strong> 탭 → 하단 <strong>내 앱</strong> 영역</li>
+              <li>웹 앱이 없으면 <strong>&lt;/&gt;</strong> 아이콘으로 웹 앱 추가</li>
+              <li><strong>firebaseConfig</strong> 객체의 각 값을 프로젝트 루트의 <code class="bg-blue-100 px-1 rounded">.env.local</code> 파일에 입력</li>
+              <li>좌측 <strong>빌드 → Authentication</strong>에서 <strong>이메일/비밀번호</strong> 로그인 활성화</li>
+              <li>좌측 <strong>빌드 → Firestore Database</strong>에서 데이터베이스 생성</li>
+            </ol>
+            <div class="bg-amber-50 text-amber-800 px-3 py-2 rounded-lg mt-2 space-y-1">
+              <p class="font-semibold">📄 .env.local 파일 형식:</p>
+              <pre class="bg-amber-100/50 px-3 py-2 rounded text-[11px] font-mono leading-relaxed overflow-x-auto">VITE_FIREBASE_API_KEY=AIzaSy...
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project
+VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef</pre>
+              <p>⚠️ <code class="bg-amber-100 px-1 rounded">.env.local</code> 수정 후에는 <strong>서버를 재시작</strong>해야 반영됩니다.</p>
+            </div>
+          </div>
+          <div class="p-6 space-y-4">
+            <!-- 현재 연결된 Firebase 프로젝트 정보 -->
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">Project ID</span>
+                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.projectId || '미설정' }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">Auth Domain</span>
+                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.authDomain || '미설정' }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">API Key</span>
+                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.apiKeyMasked || '미설정' }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">Storage Bucket</span>
+                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.storageBucket || '미설정' }}</span>
+              </div>
+            </div>
+
+            <!-- 연결 상태 -->
+            <div class="flex items-center gap-3 pt-2">
+              <button @click="testFirebase" :disabled="testingFirebase" class="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 transition whitespace-nowrap">
+                {{ testingFirebase ? '연결 확인 중...' : '🔌 연결 테스트' }}
+              </button>
+              <div v-if="firebaseTestResult" class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full" :class="firebaseTestResult.ok ? 'bg-green-500' : 'bg-red-500'"></span>
+                <span class="text-xs font-semibold" :class="firebaseTestResult.ok ? 'text-green-600' : 'text-red-500'">{{ firebaseTestResult.message }}</span>
+              </div>
+            </div>
+
+            <!-- 미설정 경고 -->
+            <div v-if="!firebaseInfo.projectId" class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs text-red-700">
+              ⚠️ Firebase 설정이 감지되지 않았습니다. 프로젝트 루트에 <strong>.env.local</strong> 파일을 생성하고 Firebase 설정값을 입력한 후 서버를 재시작해 주세요.
+            </div>
+          </div>
+        </section>
+
         <!-- 1. 시설 기본 정보 -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
@@ -80,7 +148,7 @@
           </div>
         </section>
 
-        <!-- 3. Apps Script 연동 -->
+        <!-- 3. Apps Script 연동 (Google Drive 첨부파일 관리) -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
             <h2 class="font-bold text-gray-800">📜 Google Apps Script 연동</h2>
@@ -88,79 +156,112 @@
               📖 <span>{{ guideOpen.gas ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
             </button>
           </div>
-          <div v-if="guideOpen.gas" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
-            <p class="font-semibold">📋 Apps Script 웹앱 URL 설정 방법</p>
-            <ol class="list-decimal list-inside space-y-1 text-blue-700">
-              <li><a href="https://script.google.com" target="_blank" class="underline font-semibold">Google Apps Script</a>에 접속 → <strong>새 프로젝트</strong> 생성</li>
-              <li>공문서 관리에 필요한 스크립트를 작성 (Google Drive 연동, 스프레드시트 기록 등)</li>
-              <li>상단 메뉴 <strong>배포 > 새 배포</strong> 클릭</li>
-              <li>유형: <strong>웹 앱</strong> → 실행 권한: <strong>나</strong>, 액세스: <strong>모든 사용자</strong></li>
-              <li>생성된 <strong>웹앱 URL</strong>을 복사하여 아래에 붙여넣기</li>
-            </ol>
-            <p class="text-amber-700 bg-amber-50 px-3 py-2 rounded-lg mt-2">⚠️ 이 설정은 선택사항입니다. Google Drive 연동이 필요한 경우에만 설정하세요.</p>
-          </div>
-          <div class="p-6">
-            <label class="text-xs font-semibold text-gray-600 block mb-1">Apps Script 웹앱 URL</label>
-            <input v-model="form.appsScriptUrl" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-mono" placeholder="https://script.google.com/macros/s/.../exec">
-          </div>
-        </section>
 
-        <!-- 4. 문서 분류 -->
-        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
-            <h2 class="font-bold text-gray-800">📂 문서 분류 시스템</h2>
-            <button @click="toggleGuide('cat')" class="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 transition">
-              📖 <span>{{ guideOpen.cat ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
-            </button>
-          </div>
-          <div v-if="guideOpen.cat" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
-            <p class="font-semibold">📋 문서 분류 설정 안내</p>
-            <ul class="list-disc list-inside space-y-1 text-blue-700">
-              <li>수신 공문을 분류하기 위한 <strong>카테고리 목록</strong>을 설정합니다.</li>
-              <li>문서 접수 시 해당 분류를 선택하게 됩니다.</li>
-              <li>기본 분류가 제공되며, 시설 특성에 맞게 추가/수정할 수 있습니다.</li>
-              <li>나중에 <strong>설정 메뉴</strong>에서 언제든 변경 가능합니다.</li>
-            </ul>
-          </div>
-          <div class="p-6">
-            <div class="space-y-2 mb-4">
-              <div v-for="(cat, idx) in form.categories" :key="idx" class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                <input v-model="cat.name" class="flex-1 bg-transparent text-sm font-medium text-gray-800 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1" placeholder="분류명">
-                <button @click="form.categories.splice(idx, 1)" class="text-red-400 hover:text-red-600 text-xs font-semibold transition">삭제</button>
+          <!-- 매뉴얼 (접이식) -->
+          <div v-if="guideOpen.gas" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-4">
+
+            <!-- STEP 1: Google Drive 폴더 준비 -->
+            <div>
+              <p class="font-semibold text-sm mb-2">📁 STEP 1. Google Drive 폴더 준비</p>
+              <ol class="list-decimal list-inside space-y-1 text-blue-700">
+                <li><a href="https://drive.google.com" target="_blank" class="underline font-semibold">Google Drive</a>에서 첨부파일 저장용 폴더를 생성합니다.</li>
+                <li>생성된 폴더를 열고 URL에서 <strong>폴더 ID</strong>를 복사합니다.</li>
+                <li>URL 형식: <code class="bg-blue-100 px-1 rounded">https://drive.google.com/drive/folders/<strong>여기가_폴더ID</strong></code></li>
+              </ol>
+            </div>
+
+            <!-- STEP 2: Apps Script 프로젝트 생성 -->
+            <div>
+              <p class="font-semibold text-sm mb-2">⚙️ STEP 2. Apps Script 프로젝트 생성 및 코드 입력</p>
+              <ol class="list-decimal list-inside space-y-1 text-blue-700">
+                <li><a href="https://script.google.com" target="_blank" class="underline font-semibold">Google Apps Script</a>에 접속 → <strong>새 프로젝트</strong> 생성</li>
+                <li>프로젝트 이름을 <strong>공문서관리-드라이브연동</strong> 등으로 변경</li>
+                <li>기본 <code class="bg-blue-100 px-1 rounded">Code.gs</code>의 내용을 모두 삭제하고 아래의 코드를 붙여넣기</li>
+              </ol>
+              <div class="mt-3 relative">
+                <div class="flex items-center justify-between bg-gray-800 text-gray-300 px-4 py-2 rounded-t-lg">
+                  <span class="text-[11px] font-mono">Code.gs</span>
+                  <button @click="copyScriptCode" class="text-[11px] bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded transition font-semibold">
+                    {{ scriptCopied ? '✅ 복사됨!' : '📋 코드 복사' }}
+                  </button>
+                </div>
+                <pre class="bg-gray-900 text-green-400 px-4 py-3 rounded-b-lg text-[11px] font-mono leading-relaxed overflow-x-auto max-h-80 overflow-y-auto whitespace-pre">{{ gasScriptCode }}</pre>
               </div>
             </div>
-            <button @click="addCategory" class="text-blue-600 text-sm font-semibold hover:text-blue-800 transition">+ 새 분류 추가</button>
-          </div>
-        </section>
 
-        <!-- 5. 결재 검토 흐름 -->
-        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
-            <h2 class="font-bold text-gray-800">🔄 결재 검토 흐름</h2>
-            <button @click="toggleGuide('review')" class="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 transition">
-              📖 <span>{{ guideOpen.review ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
-            </button>
+            <!-- STEP 3: 스크립트 속성 설정 -->
+            <div>
+              <p class="font-semibold text-sm mb-2">🔧 STEP 3. 스크립트 속성 설정 (중요!)</p>
+              <p class="text-blue-700 mb-2">코드에는 폴더 ID, Slack URL 등이 하드코딩되어 있지 않습니다.<br><strong>스크립트 속성</strong>에 아래 값들을 설정해야 합니다.</p>
+              <ol class="list-decimal list-inside space-y-1 text-blue-700">
+                <li>Apps Script 편집기 좌측 메뉴에서 <strong>⚙️ 프로젝트 설정</strong> 클릭</li>
+                <li>하단 <strong>스크립트 속성</strong> 영역에서 <strong>스크립트 속성 추가</strong> 클릭</li>
+                <li>아래 표의 속성을 하나씩 추가합니다:</li>
+              </ol>
+              <div class="mt-3 bg-white rounded-lg border border-blue-200 overflow-hidden">
+                <table class="w-full text-[11px]">
+                  <thead>
+                    <tr class="bg-blue-100 text-blue-900">
+                      <th class="px-3 py-2 text-left font-bold">속성 이름</th>
+                      <th class="px-3 py-2 text-left font-bold">값 (예시)</th>
+                      <th class="px-3 py-2 text-left font-bold">설명</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-blue-800">
+                    <tr class="border-t border-blue-100">
+                      <td class="px-3 py-2 font-mono font-semibold">DRIVE_FOLDER_ID</td>
+                      <td class="px-3 py-2 font-mono">1aBcDeFgHiJ...</td>
+                      <td class="px-3 py-2">첨부파일 저장 Google Drive 폴더 ID</td>
+                    </tr>
+                    <tr class="border-t border-blue-100 bg-blue-50/30">
+                      <td class="px-3 py-2 font-mono font-semibold">SLACK_WEBHOOK_URL</td>
+                      <td class="px-3 py-2 font-mono">https://hooks.slack.com/...</td>
+                      <td class="px-3 py-2">Slack 알림 Webhook URL (선택)</td>
+                    </tr>
+                    <tr class="border-t border-blue-100">
+                      <td class="px-3 py-2 font-mono font-semibold">ORG_NAME</td>
+                      <td class="px-3 py-2 font-mono">동행빌리지</td>
+                      <td class="px-3 py-2">Slack 알림에 표시할 기관명 (선택)</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- STEP 4: 배포 -->
+            <div>
+              <p class="font-semibold text-sm mb-2">🚀 STEP 4. 웹앱으로 배포</p>
+              <ol class="list-decimal list-inside space-y-1 text-blue-700">
+                <li>상단 메뉴 <strong>배포 → 새 배포</strong> 클릭</li>
+                <li>좌측 ⚙️ 아이콘 → 유형 선택: <strong>웹 앱</strong></li>
+                <li>설명: <code class="bg-blue-100 px-1 rounded">v1 - 초기 배포</code> 등 입력</li>
+                <li><strong>실행 주체</strong>: <code class="bg-blue-100 px-1 rounded">나</code> (본인의 Google 계정)</li>
+                <li><strong>액세스 권한</strong>: <code class="bg-blue-100 px-1 rounded">모든 사용자</code></li>
+                <li><strong>배포</strong> 버튼 클릭 → 권한 승인</li>
+                <li>생성된 <strong>웹앱 URL</strong>을 복사하여 아래 입력란에 붙여넣기</li>
+              </ol>
+              <div class="bg-amber-50 text-amber-800 px-3 py-2 rounded-lg mt-2 space-y-1">
+                <p>⚠️ 코드를 수정한 경우 <strong>배포 → 배포 관리 → ✏️ 수정 → 새 버전</strong>으로 업데이트해야 반영됩니다.</p>
+                <p>⚠️ 이 설정은 <strong>선택사항</strong>입니다. Google Drive 첨부파일 관리가 필요한 경우에만 설정하세요.</p>
+              </div>
+            </div>
           </div>
-          <div v-if="guideOpen.review" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
-            <p class="font-semibold">📋 결재 검토 흐름 안내</p>
-            <ul class="list-disc list-inside space-y-1 text-blue-700">
-              <li>문서가 접수되면 <strong>담당자 배정 → 1차 검토 → 2차 검토 → 최종 검토</strong> 순서로 진행됩니다.</li>
-              <li>각 단계의 <strong>직책명, 이메일, 이름</strong>을 입력합니다.</li>
-              <li>검토자의 이메일은 <strong>사용자 관리에서 등록한 계정 이메일</strong>과 동일해야 합니다.</li>
-              <li>검토 단계는 나중에 설정에서 수정할 수 있으며, 사용자 등록 후 설정하셔도 됩니다.</li>
-            </ul>
-          </div>
+
+          <!-- 입력 필드 영역 -->
           <div class="p-6 space-y-4">
-            <div v-for="(step, idx) in form.reviewSteps" :key="idx" class="flex items-center gap-4 bg-blue-50/30 p-4 rounded-xl border border-blue-100/50">
-              <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0">{{ step.level }}</div>
-              <div class="flex-1 space-y-2">
-                <input v-model="step.label" class="w-full bg-transparent font-medium text-sm text-gray-800 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1" placeholder="직책 예: 1차 검토자">
-                <input v-model="step.email" class="w-full bg-transparent text-sm text-gray-600 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1" placeholder="이메일 (사용자 등록 후 입력 가능)">
-                <input v-model="step.name" class="w-full bg-transparent text-sm text-gray-600 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1" placeholder="직원명">
-              </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-600 block mb-1">Google Drive 첨부파일 폴더 ID</label>
+              <input v-model="form.driveFolderId" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-mono" placeholder="예: 1aBcDeFgHiJkLmNoPqRsTuVwXyZ">
+              <p class="text-[11px] text-gray-400 mt-1">Google Drive 폴더 URL에서 folders/ 뒤의 문자열을 입력하세요.</p>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-600 block mb-1">Apps Script 웹앱 URL</label>
+              <input v-model="form.appsScriptUrl" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition font-mono" placeholder="https://script.google.com/macros/s/.../exec">
             </div>
           </div>
         </section>
+
+
 
         <!-- 완료 버튼 -->
         <div class="pt-4">
@@ -168,6 +269,7 @@
             {{ saving ? '설정 저장 중...' : '✅ 초기설정 완료' }}
           </button>
           <p class="text-xs text-center text-gray-400 mt-3">Slack, Apps Script 설정은 선택사항이며 나중에 설정 메뉴에서 변경할 수 있습니다.</p>
+          <p class="text-xs text-center text-gray-400 mt-1">문서 분류 및 결재 검토 흐름은 설정 메뉴에서 구성할 수 있습니다.</p>
         </div>
       </div>
     </div>
@@ -188,12 +290,24 @@ const saving = ref(false)
 const testingSlack = ref(false)
 const slackTestResult = ref(null)
 
+const testingFirebase = ref(false)
+const firebaseTestResult = ref(null)
+
+// 현재 .env.local에서 로드된 Firebase 설정 정보
+const firebaseInfo = reactive({
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  apiKeyMasked: import.meta.env.VITE_FIREBASE_API_KEY
+    ? import.meta.env.VITE_FIREBASE_API_KEY.slice(0, 10) + '••••••••••'
+    : ''
+})
+
 const guideOpen = reactive({
-  org: true,   // 첫 설정이므로 기본 열림
+  firebase: true,  // Firebase 설정 안내를 기본 열림
+  org: false,
   slack: false,
-  gas: false,
-  cat: false,
-  review: false
+  gas: false
 })
 
 const form = reactive({
@@ -201,29 +315,172 @@ const form = reactive({
   facilityType: '',
   slackWebhookUrl: '',
   appsScriptUrl: '',
-  categories: [
-    { code: 'CAT1', name: '사무', active: true },
-    { code: 'CAT2', name: '간호/의료', active: true },
-    { code: 'CAT3', name: '생활지원', active: true }
-  ],
-  reviewSteps: [
-    { level: 1, label: '1차 검토자', email: '', name: '' },
-    { level: 2, label: '2차 검토자', email: '', name: '' },
-    { level: 3, label: '최종 검토자', email: '', name: '' }
-  ]
+  driveFolderId: ''
 })
+
+// Apps Script 코드 (PropertiesService 기반 — 하드코딩 없음)
+const scriptCopied = ref(false)
+const gasScriptCode = `/**
+ * 공문서 관리 시스템 — Google Drive 첨부파일 업로드 & Slack 알림
+ * ⚙️ 스크립트 속성(프로젝트 설정)에서 아래 값을 설정하세요:
+ *   - DRIVE_FOLDER_ID : 첨부파일 저장 폴더 ID
+ *   - SLACK_WEBHOOK_URL : Slack 알림 URL (선택)
+ *   - ORG_NAME : 기관명 (선택, Slack 메시지용)
+ */
+
+// ── 스크립트 속성에서 설정값 불러오기 ──
+function getConfig(key) {
+  return PropertiesService.getScriptProperties().getProperty(key) || '';
+}
+
+// ── POST 요청 수신 (웹앱 엔드포인트) ──
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const action = data.action || 'upload';
+
+    let result;
+    switch (action) {
+      case 'upload':
+        result = handleFileUpload(data);
+        break;
+      case 'notify':
+        result = sendSlackNotification(data);
+        break;
+      default:
+        result = { success: false, message: '알 수 없는 action: ' + action };
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ── GET 요청 (헬스체크용) ──
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      message: '공문서 관리 Apps Script가 정상 작동 중입니다.'
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── 파일 업로드 처리 ──
+function handleFileUpload(data) {
+  const folderId = getConfig('DRIVE_FOLDER_ID');
+  if (!folderId) {
+    return { success: false, message: 'DRIVE_FOLDER_ID 스크립트 속성이 설정되지 않았습니다.' };
+  }
+
+  const folder = DriveApp.getFolderById(folderId);
+  const fileName = data.fileName || '첨부파일_' + new Date().getTime();
+  const fileData = Utilities.base64Decode(data.fileBase64);
+  const mimeType = data.mimeType || 'application/octet-stream';
+  const blob = Utilities.newBlob(fileData, mimeType, fileName);
+
+  // 문서번호별 하위 폴더 생성 (선택)
+  let targetFolder = folder;
+  if (data.receiptNo) {
+    const subFolders = folder.getFoldersByName(data.receiptNo);
+    targetFolder = subFolders.hasNext()
+      ? subFolders.next()
+      : folder.createFolder(data.receiptNo);
+  }
+
+  const file = targetFolder.createFile(blob);
+  file.setSharing(
+    DriveApp.Access.ANYONE_WITH_LINK,
+    DriveApp.Permission.VIEW
+  );
+
+  // Slack 알림 (선택)
+  const slackUrl = getConfig('SLACK_WEBHOOK_URL');
+  if (slackUrl && data.receiptNo) {
+    const orgName = getConfig('ORG_NAME') || '공문서 관리';
+    sendSlack(slackUrl, ':file_folder: *[' + orgName + '] 첨부파일 업로드*\\n'
+      + '> 문서번호: ' + data.receiptNo + '\\n'
+      + '> 파일명: ' + fileName + '\\n'
+      + '> <' + file.getUrl() + '|Drive에서 보기>');
+  }
+
+  return {
+    success: true,
+    fileId: file.getId(),
+    fileUrl: file.getUrl(),
+    fileName: file.getName()
+  };
+}
+
+// ── Slack 알림 전송 ──
+function sendSlackNotification(data) {
+  const slackUrl = getConfig('SLACK_WEBHOOK_URL');
+  if (!slackUrl) {
+    return { success: false, message: 'SLACK_WEBHOOK_URL 스크립트 속성이 설정되지 않았습니다.' };
+  }
+  const orgName = getConfig('ORG_NAME') || '공문서 관리';
+  const text = data.text || ':bell: *[' + orgName + ']* 새 알림이 있습니다.';
+  sendSlack(slackUrl, text);
+  return { success: true };
+}
+
+// ── Slack 전송 헬퍼 ──
+function sendSlack(webhookUrl, text) {
+  UrlFetchApp.fetch(webhookUrl, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({ text: text })
+  });
+}`
+
+const copyScriptCode = async () => {
+  try {
+    await navigator.clipboard.writeText(gasScriptCode)
+    scriptCopied.value = true
+    setTimeout(() => { scriptCopied.value = false }, 2000)
+  } catch {
+    // fallback
+    const ta = document.createElement('textarea')
+    ta.value = gasScriptCode
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+    scriptCopied.value = true
+    setTimeout(() => { scriptCopied.value = false }, 2000)
+  }
+}
+
+const testFirebase = async () => {
+  testingFirebase.value = true
+  firebaseTestResult.value = null
+  try {
+    // Firestore에 간단한 읽기 시도로 연결 확인
+    const { doc: fbDoc, getDoc } = await import('firebase/firestore')
+    await getDoc(fbDoc(db, 'settings', 'orgInfo'))
+    firebaseTestResult.value = { ok: true, message: 'Firestore 연결 성공! 정상적으로 작동합니다.' }
+  } catch (e) {
+    console.error('Firebase 연결 테스트 실패:', e)
+    if (e.code === 'permission-denied') {
+      firebaseTestResult.value = { ok: true, message: 'Firebase 연결됨 (보안 규칙에 의해 접근 제한 — 정상)' }
+    } else {
+      firebaseTestResult.value = { ok: false, message: `연결 실패: ${e.message}` }
+    }
+  } finally {
+    testingFirebase.value = false
+  }
+}
 
 const toggleGuide = (key) => {
   guideOpen[key] = !guideOpen[key]
 }
 
-const addCategory = () => {
-  form.categories.push({
-    code: 'CAT' + Date.now().toString().slice(-4),
-    name: '',
-    active: true
-  })
-}
 
 const testSlack = async () => {
   testingSlack.value = true
@@ -257,18 +514,11 @@ const completeSetup = async () => {
       facilityType: form.facilityType,
       slackWebhookUrl: form.slackWebhookUrl.trim(),
       appsScriptUrl: form.appsScriptUrl.trim(),
+      driveFolderId: form.driveFolderId.trim(),
       isInitialized: true,
       initializedAt: new Date()
     })
 
-    // 2. 문서 분류 저장
-    const validCategories = form.categories.filter(c => c.name.trim())
-    if (validCategories.length > 0) {
-      await setDoc(doc(db, 'settings', 'categories'), { items: validCategories })
-    }
-
-    // 3. 결재 흐름 저장
-    await setDoc(doc(db, 'settings', 'reviewFlow'), { steps: form.reviewSteps })
 
     // 4. 스토어 갱신
     await settingsStore.loadSettings()
