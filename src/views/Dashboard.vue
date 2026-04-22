@@ -106,6 +106,11 @@ const handleLogout = async () => {
 }
 
 const loadData = async () => {
+  if (authStore.profile?.role === 'user') {
+    router.replace('/mydocs')
+    return
+  }
+
   try {
     const q = query(collection(db, 'documents'), orderBy('createdAt', 'desc'), limit(50))
     const snap = await getDocs(q)

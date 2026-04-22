@@ -60,7 +60,7 @@ const displayOrgName = computed(() => {
 })
 
 const menus = [
-  { path: '/', name: '대시보드', icon: '📊', roles: ['admin', 'receiver', 'reviewer', 'user'] },
+  { path: '/', name: '대시보드', icon: '📊', roles: ['admin', 'receiver', 'reviewer'] },
   { path: '/receive', name: '문서 접수', icon: '📥', roles: ['admin', 'receiver'] },
   { path: '/assign', name: '배정 관리', icon: '📋', roles: ['admin', 'receiver'] },
   { path: '/mydocs', name: '내 문서함', icon: '📄', roles: ['reviewer', 'user'] },
