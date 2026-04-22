@@ -13,7 +13,7 @@
     </div>
 
     <div v-else class="space-y-4">
-      <div v-for="d in docs" :key="d.id" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-blue-200 transition">
+      <div v-for="d in docs" :key="d.id" @click="openDocDetail(d)" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md hover:border-blue-200 cursor-pointer transition">
         <div class="flex-1 space-y-2">
           <div class="flex items-center gap-3">
             <span class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{{ d.receiptNo }}</span>
@@ -24,7 +24,7 @@
           <p class="text-sm text-gray-500">발신: {{ d.senderOrg }} {{ d.senderDocNo ? `(${d.senderDocNo})` : '' }} | 분류: {{ d.categoryName }}</p>
         </div>
         
-        <div class="md:w-72">
+        <div class="md:w-72" @click.stop>
           <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
             <label class="text-xs font-semibold text-gray-600 block mb-2">당당자 배정</label>
             <div class="flex gap-2">
@@ -40,6 +40,9 @@
         </div>
       </div>
     </div>
+
+    <!-- 문서 상세 모달 -->
+    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" />
   </div>
 </template>
 
@@ -47,10 +50,20 @@
 import { ref, onMounted } from 'vue'
 import { db } from '../../firebase/config'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
+import DocDetailModal from '../../components/DocDetailModal.vue'
 
 const loading = ref(true)
 const docs = ref([])
 const users = ref([])
+
+// 모달 관련 상태
+const showModal = ref(false)
+const selectedDoc = ref({})
+
+const openDocDetail = (doc) => {
+  selectedDoc.value = doc
+  showModal.value = true
+}
 
 const loadData = async () => {
   loading.value = true

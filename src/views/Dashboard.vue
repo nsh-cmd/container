@@ -25,36 +25,46 @@
         </div>
       </div>
       
-      <div class="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 max-w-4xl">
+      <div class="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-6 w-full">
         <h2 class="text-md font-bold text-gray-800 mb-4">최근 등록된 문서 내역</h2>
         
-        <table class="w-full text-left">
-          <thead>
-            <tr class="bg-gray-50 text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wider">
-              <th class="px-4 py-3 font-medium">접수번호</th>
-              <th class="px-4 py-3 font-medium">제목</th>
-              <th class="px-4 py-3 font-medium">상태</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            <tr v-for="d in recentDocs" :key="d.id" class="hover:bg-blue-50/50 transition">
-              <td class="px-4 py-3 text-xs font-mono font-bold text-blue-600">{{ d.receiptNo }}</td>
-              <td class="px-4 py-3 text-sm font-semibold text-gray-800 line-clamp-1">{{ d.title }}</td>
-              <td class="px-4 py-3">
-                <span class="px-2 py-1 text-xs font-semibold rounded-lg" :class="{
-                  'bg-gray-100 text-gray-600': d.status === '접수대기',
-                  'bg-amber-50 text-amber-600': d.status === '배정완료',
-                  'bg-blue-50 text-blue-600': d.status === '처리중',
-                  'bg-green-50 text-green-700': d.status === '완료'
-                }">{{ d.status }}</span>
-              </td>
-            </tr>
-            <tr v-if="recentDocs.length === 0">
-              <td colspan="3" class="px-4 py-6 text-center text-gray-400 text-sm">최근 등록된 문서가 없습니다.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left whitespace-nowrap">
+            <thead>
+              <tr class="bg-gray-50 text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wider">
+                <th class="px-4 py-3 font-medium">접수번호</th>
+                <th class="px-4 py-3 font-medium">제목 및 개요</th>
+                <th class="px-4 py-3 font-medium">담당자</th>
+                <th class="px-4 py-3 font-medium">상태</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              <tr v-for="d in recentDocs" :key="d.id" @click="openDocDetail(d)" class="hover:bg-blue-50/50 transition cursor-pointer">
+                <td class="px-4 py-3 text-xs font-mono font-bold text-blue-600">{{ d.receiptNo }}</td>
+                <td class="px-4 py-3 min-w-[250px] max-w-sm whitespace-normal">
+                  <p class="text-sm font-semibold text-gray-800 line-clamp-1">{{ d.title }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-700 font-medium">{{ d.assigneeName || '미배정' }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs font-semibold rounded-lg" :class="{
+                    'bg-gray-100 text-gray-600': d.status === '접수대기',
+                    'bg-amber-50 text-amber-600': d.status === '배정완료',
+                    'bg-blue-50 text-blue-600': d.status === '처리중',
+                    'bg-green-50 text-green-700': d.status === '완료'
+                  }">{{ d.status }}</span>
+                </td>
+              </tr>
+              <tr v-if="recentDocs.length === 0">
+                <td colspan="4" class="px-4 py-6 text-center text-gray-400 text-sm">최근 등록된 문서가 없습니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- 문서 상세 모달 -->
+      <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" />
   </div>
 </template>
 
@@ -64,12 +74,22 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import { db } from '../firebase/config'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import DocDetailModal from '../components/DocDetailModal.vue'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const stats = ref({ wait: 0, assigned: 0, processing: 0, done: 0 })
 const recentDocs = ref([])
+
+// 모달 관련 상태
+const showModal = ref(false)
+const selectedDoc = ref({})
+
+const openDocDetail = (doc) => {
+  selectedDoc.value = doc
+  showModal.value = true
+}
 
 const userInitial = computed(() => {
   return authStore.profile?.name ? authStore.profile.name.charAt(0) : 'U'

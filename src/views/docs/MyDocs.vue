@@ -36,6 +36,8 @@
       </div>
     </div>
     
+    <!-- 문서 상세 모달 -->
+    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" />
   </div>
 </template>
 
@@ -44,11 +46,15 @@ import { ref, onMounted } from 'vue'
 import { db } from '../../firebase/config'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { useAuthStore } from '../../store/auth'
-import { useRouter } from 'vue-router' // For advanced doc viewing later if needed
+import DocDetailModal from '../../components/DocDetailModal.vue'
 
 const loading = ref(true)
 const docs = ref([])
 const authStore = useAuthStore()
+
+// 모달 관련 상태
+const showModal = ref(false)
+const selectedDoc = ref({})
 
 const loadData = async () => {
   loading.value = true
@@ -106,10 +112,16 @@ const openDoc = async (d) => {
   let needsUpdate = false
   let updates = {}
 
+  // 현재 문서 데이터 딥카피 (UI 즉각 반영 위함)
+  const docDataForModal = { ...d }
+
   if (d.assigneeEmail === email && !d.assigneeReadAt) {
     updates.assigneeReadAt = new Date()
     updates.status = d.status === '배정완료' ? '처리중' : d.status
     needsUpdate = true
+    
+    docDataForModal.assigneeReadAt = updates.assigneeReadAt
+    docDataForModal.status = updates.status
   }
 
   const reviewSteps = [...(d.reviewSteps || [])]
@@ -128,19 +140,24 @@ const openDoc = async (d) => {
       if (updates.status !== '완료') updates.status = '처리중'
     }
     needsUpdate = true
+
+    docDataForModal.reviewSteps = reviewSteps
+    docDataForModal.status = updates.status || d.status
   }
 
+  // 모달 먼저 띄우기
+  selectedDoc.value = docDataForModal
+  showModal.value = true
+
+  // 백그라운드 업데이트
   if (needsUpdate) {
     try {
       const refDoc = doc(db, 'documents', d.id)
       await updateDoc(refDoc, updates)
-      alert(`${d.title}\n=> 문서를 열람하여 상태가 반영되었습니다. (상세 페이지는 추가 구현 예정)`)
-      await loadData() // refresh local
+      await loadData() // refresh local silently
     } catch(e) {
-      alert('상태 업데이트 실패')
+      console.error('상태 업데이트 실패', e)
     }
-  } else {
-    alert(`${d.title}\n=> 이미 진행된 문서입니다.`)
   }
 }
 
