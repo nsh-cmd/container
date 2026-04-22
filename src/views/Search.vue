@@ -50,7 +50,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
-          <tr v-for="d in results" :key="d.id" class="hover:bg-blue-50/50 transition cursor-pointer">
+          <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-blue-50/50 transition cursor-pointer">
             <td class="px-6 py-4 text-xs font-mono font-bold text-blue-600">{{ d.receiptNo }}</td>
             <td class="px-6 py-4 text-sm font-semibold text-gray-800">{{ d.title }}</td>
             <td class="px-6 py-4 text-sm text-gray-500">{{ d.senderOrg }}</td>
@@ -67,13 +67,20 @@
         </tbody>
       </table>
     </div>
+
+    <!-- 문서 상세 모달 -->
+    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { db } from '../firebase/config'
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore'
+import DocDetailModal from '../components/DocDetailModal.vue'
+
+const route = useRoute()
 
 const loading = ref(false)
 const hasSearched = ref(false)
@@ -83,6 +90,15 @@ const filters = ref({
   keyword: '',
   status: ''
 })
+
+// 모달 관련 상태
+const showModal = ref(false)
+const selectedDoc = ref({})
+
+const openDocDetail = (doc) => {
+  selectedDoc.value = doc
+  showModal.value = true
+}
 
 const doSearch = async () => {
   loading.value = true
@@ -125,4 +141,11 @@ const formatDate = (dateObj) => {
   const d = new Date(dateObj)
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`
 }
+
+onMounted(() => {
+  if (route.query.q) {
+    filters.value.keyword = route.query.q
+    doSearch()
+  }
+})
 </script>
