@@ -79,8 +79,10 @@ import { useRoute } from 'vue-router'
 import { db } from '../firebase/config'
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore'
 import DocDetailModal from '../components/DocDetailModal.vue'
+import { useAuthStore } from '../store/auth'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const hasSearched = ref(false)
@@ -104,17 +106,32 @@ const doSearch = async () => {
   loading.value = true
   hasSearched.value = true
   try {
-    let q = query(collection(db, 'documents'), orderBy('createdAt', 'desc'), limit(100))
-    if (filters.value.status) {
-      q = query(collection(db, 'documents'), where('status', '==', filters.value.status), orderBy('createdAt', 'desc'), limit(100))
+    const userRole = authStore.profile?.role
+    const userEmail = authStore.user.email
+    const isBasicUser = userRole === 'user'
+
+    let snap;
+    if (isBasicUser) {
+      // 일반 담당자는 자신에게 배정된 문서만 가져와서 로컬에서 정렬 및 필터링 (권한 및 색인 오류 방지)
+      const q = query(collection(db, 'documents'), where('assigneeEmail', '==', userEmail))
+      snap = await getDocs(q)
+    } else {
+      // 관리자 등은 전체 문서 중 최근 100건 조회
+      const q = query(collection(db, 'documents'), orderBy('createdAt', 'desc'), limit(100))
+      snap = await getDocs(q)
     }
 
-    const snap = await getDocs(q)
     let fetched = snap.docs.map(d => ({ 
       id: d.id, 
       ...d.data(),
-      receiptDate: d.data().receiptDate?.toDate?.() || d.data().receiptDate
+      receiptDate: d.data().receiptDate?.toDate?.() || d.data().receiptDate,
+      createdAt: d.data().createdAt?.toDate?.() || d.data().createdAt
     }))
+
+    // 로컬 상태 필터링 (복합 색인 오류 방지)
+    if (filters.value.status) {
+      fetched = fetched.filter(d => d.status === filters.value.status)
+    }
 
     // 로컬 키워드 필터링 (Firestore는 Full-text Search 미지원)
     const kw = filters.value.keyword.trim().toLowerCase()
@@ -127,10 +144,15 @@ const doSearch = async () => {
       )
     }
 
+    // 일반 사용자는 쿼리 시 정렬을 생략했으므로 메모리상에서 정렬
+    if (isBasicUser) {
+      fetched.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    }
+
     results.value = fetched
   } catch (err) {
     console.error(err)
-    alert('검색 중 오류가 발생했습니다. (Firestore 색인이 필요할 수 있습니다.)')
+    alert('검색 중 오류가 발생했습니다. 권한 또는 네트워크를 확인하세요.')
   } finally {
     loading.value = false
   }
