@@ -161,17 +161,32 @@
           <p class="font-semibold">📋 검토 흐름 안내</p>
           <ul class="list-disc list-inside space-y-1 text-blue-700">
             <li>문서 접수 후 <strong>담당자 배정 → 1차 → 2차 → 최종 검토</strong> 순서입니다.</li>
-            <li>각 검토자의 이메일은 <strong>사용자 관리에서 등록한 계정</strong>과 동일해야 합니다.</li>
+            <li><strong>사용자 관리</strong>에서 등록된 직원 목록에서 각 단계의 검토자를 선택합니다.</li>
+            <li>검토자가 아직 등록되지 않았다면, 먼저 <strong>사용자 관리</strong>에서 직원을 추가하세요.</li>
           </ul>
         </div>
         <div class="p-6 space-y-4">
-          <p class="text-xs text-gray-500 font-medium">문서는 등록 후 배정자를 거쳐 아래의 기본 3차례 검토자를 순차 또는 병렬로 거치게 됩니다.</p>
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-gray-500 font-medium">사용자 관리에 등록된 직원 중에서 각 단계의 검토자를 선택하세요.</p>
+            <span v-if="registeredUsers.length === 0" class="text-xs text-red-500 font-semibold">⚠️ 등록된 사용자가 없습니다</span>
+            <span v-else class="text-xs text-gray-400">등록 직원 {{ registeredUsers.length }}명</span>
+          </div>
           <div v-for="(step, idx) in reviewSteps" :key="idx" class="flex items-center gap-4 bg-blue-50/30 p-4 rounded-xl border border-blue-100/50">
-            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold">{{ step.level }}</div>
+            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0">{{ step.level }}</div>
             <div class="flex-1 space-y-2">
               <input v-model="step.label" class="w-full bg-transparent font-medium text-sm text-gray-800 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1 placeholder-gray-400" placeholder="직책 예: 1차 검토자">
-              <input v-model="step.email" class="w-full bg-transparent text-sm text-gray-600 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1 placeholder-gray-400" placeholder="사용자 이메일">
-              <input v-model="step.name" class="w-full bg-transparent text-sm text-gray-600 border-b border-gray-200 focus:outline-none focus:border-blue-500 pb-1" placeholder="직원명">
+              <select @change="onSelectReviewer($event, idx)" :value="step.email" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                <option value="">-- 검토자를 선택하세요 --</option>
+                <option v-for="user in registeredUsers" :key="user.id" :value="user.email">
+                  {{ user.name }} ({{ user.department || '직급 미설정' }}) — {{ user.email }}
+                </option>
+              </select>
+              <div v-if="step.email" class="flex items-center gap-2 text-xs text-gray-500 pl-1">
+                <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-md font-medium">
+                  ✅ {{ step.name }}
+                </span>
+                <span class="text-gray-400">{{ step.email }}</span>
+              </div>
             </div>
           </div>
           <button @click="saveReviewSteps" class="w-full bg-blue-600 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-sm mt-2">흐름 설정 저장</button>
@@ -185,7 +200,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { db } from '../firebase/config'
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore'
 import { useSettingsStore } from '../store/settings'
 
 const settingsStore = useSettingsStore()
@@ -215,6 +230,36 @@ const reviewSteps = ref([
   { level: 2, label: '2차 검토자', email: '', name: '' },
   { level: 3, label: '최종 검토자', email: '', name: '' }
 ])
+
+// 사용자 관리에서 등록된 직원 목록
+const registeredUsers = ref([])
+
+const loadRegisteredUsers = async () => {
+  try {
+    const snap = await getDocs(collection(db, 'users'))
+    registeredUsers.value = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(u => u.active) // 활성 사용자만
+  } catch (e) {
+    console.error('사용자 목록 로드 실패:', e)
+  }
+}
+
+// 검토자 선택 시 email/name 자동 채움
+const onSelectReviewer = (event, stepIdx) => {
+  const selectedEmail = event.target.value
+  const step = reviewSteps.value[stepIdx]
+  if (!selectedEmail) {
+    step.email = ''
+    step.name = ''
+    return
+  }
+  const user = registeredUsers.value.find(u => u.email === selectedEmail)
+  if (user) {
+    step.email = user.email
+    step.name = user.name
+  }
+}
 
 const loadSettings = async () => {
   try {
@@ -333,5 +378,6 @@ const saveReviewSteps = async () => {
 
 onMounted(() => {
   loadSettings()
+  loadRegisteredUsers()
 })
 </script>
