@@ -37,17 +37,17 @@ service cloud.firestore {
         (isReceiver() || 
          isAdmin() || 
          isReviewer() || 
-         request.auth.email in resource.data.assigneeEmails);
+         resource.data.assigneeEmail == request.auth.token.email);
 
       allow create: if request.auth != null && 
         (isReceiver() || isAdmin()) &&
-        request.resource.data.receiptUserEmail == request.auth.email &&
+        request.resource.data.receiptUserEmail == request.auth.token.email &&
         request.resource.data.receiptDate != null &&
         request.resource.data.title != null;
 
       allow update: if request.auth != null && 
-        (isReceiver() || isAdmin()) &&
-        resource.data.receiptUserEmail == request.auth.email;
+        (isReceiver() || isAdmin() || resource.data.assigneeEmail == request.auth.token.email) &&
+        (request.resource.data.receiptUserEmail == resource.data.receiptUserEmail);
 
       allow delete: if isAdmin();
     }
@@ -60,7 +60,7 @@ service cloud.firestore {
          isReviewer());
 
       allow create: if request.auth != null &&
-        request.resource.data.reviewerEmail == request.auth.email;
+        request.resource.data.reviewerEmail == request.auth.token.email;
 
       allow delete: if isAdmin();
     }

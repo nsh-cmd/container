@@ -60,32 +60,36 @@ const loadData = async () => {
   loading.value = true
   try {
     const userEmail = authStore.user.email
-    
-    // Firestore OR conditions are limited in V8, we can fetch all and filter locally for ease,
-    // Or fetch where assigneeEmail == userEmail, AND fetch reviewer docs separately.
-    // Assignee Query:
-    const qAssignee = query(collection(db, 'documents'), where('assigneeEmail', '==', userEmail))
-    const snapAssignee = await getDocs(qAssignee)
-    
-    // We would need to fetch Reviewer docs. A simple way for a small app is fetching all active docs, 
-    // or restructuring. We'll do a basic fetch for now.
-    
-    // Fetch all for reviewers if it's complex and filter:
-    const snapAll = await getDocs(collection(db, 'documents'))
+    const userRole = authStore.profile?.role
+    const isBasicUser = userRole === 'user'
     
     const merged = new Map()
-    snapAll.docs.forEach(d => {
+
+    // Assignee Query: 본인이 담당자로 지정된 문서
+    const qAssignee = query(collection(db, 'documents'), where('assigneeEmail', '==', userEmail))
+    const snapAssignee = await getDocs(qAssignee)
+    snapAssignee.docs.forEach(d => {
       const data = d.data()
-      // Check if user is Assignee OR inside ReviewSteps
-      const isAssignee = data.assigneeEmail === userEmail
-      const isReviewer = (data.reviewSteps || []).some(s => s.email === userEmail)
-      
-      if (isAssignee || isReviewer) {
-        data.assignedAt = data.assignedAt?.toDate?.() || data.assignedAt
-        data.receiptDate = data.receiptDate?.toDate?.() || data.receiptDate
-        merged.set(d.id, { id: d.id, ...data })
-      }
+      data.assignedAt = data.assignedAt?.toDate?.() || data.assignedAt
+      data.receiptDate = data.receiptDate?.toDate?.() || data.receiptDate
+      merged.set(d.id, { id: d.id, ...data })
     })
+    
+    // 관리자, 검토자, 접수자인 경우 모든 문서를 가져와 검토자/담당자 여부 확인
+    if (!isBasicUser) {
+      const snapAll = await getDocs(collection(db, 'documents'))
+      snapAll.docs.forEach(d => {
+        const data = d.data()
+        const isAssignee = data.assigneeEmail === userEmail
+        const isReviewer = (data.reviewSteps || []).some(s => s.email === userEmail)
+        
+        if (isAssignee || isReviewer) {
+          data.assignedAt = data.assignedAt?.toDate?.() || data.assignedAt
+          data.receiptDate = data.receiptDate?.toDate?.() || data.receiptDate
+          merged.set(d.id, { id: d.id, ...data })
+        }
+      })
+    }
     
     docs.value = Array.from(merged.values()).sort((a,b) => (b.assignedAt || 0) - (a.assignedAt || 0))
   } catch(e) {
