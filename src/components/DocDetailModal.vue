@@ -30,7 +30,13 @@
           </div>
           <div class="text-right">
             <p class="text-xs text-blue-600 font-semibold mb-1">담당자</p>
-            <p class="text-sm font-medium text-gray-800">{{ docData.assigneeName || '미배정' }}</p>
+            <div class="flex items-center justify-end gap-2">
+              <p class="text-sm font-medium text-gray-800">{{ docData.assigneeName || '미배정' }}</p>
+              <span v-if="docData.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded border" :class="docData.assigneeReadAt ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'">
+                {{ docData.assigneeReadAt ? '읽음' : '미확인' }}
+              </span>
+            </div>
+            <p v-if="docData.assigneeReadAt" class="text-[10px] text-gray-400 mt-0.5">{{ formatDate(docData.assigneeReadAt) }}</p>
           </div>
         </div>
 
@@ -108,8 +114,11 @@
                   <p class="text-sm font-semibold text-gray-800">{{ step.label }} <span class="text-xs font-normal text-gray-500 ml-1">{{ step.name || '미지정' }}</span></p>
                 </div>
               </div>
-              <div class="text-xs font-medium px-2.5 py-1 rounded-md" :class="step.isRead ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
-                {{ step.isRead ? '확인 완료' : '대기중' }}
+              <div class="text-right">
+                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="step.isRead ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
+                  {{ step.isRead ? '확인 완료' : '대기중' }}
+                </div>
+                <p v-if="step.isRead && step.readAt" class="text-[10px] text-gray-400">{{ formatDate(step.readAt) }}</p>
               </div>
             </div>
           </div>

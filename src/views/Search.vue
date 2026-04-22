@@ -43,17 +43,40 @@
         <thead>
           <tr class="bg-gray-50 text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wider">
             <th class="px-6 py-4 font-medium min-w-[120px]">접수번호</th>
-            <th class="px-6 py-4 font-medium w-full">제목</th>
-            <th class="px-6 py-4 font-medium whitespace-nowrap">발신기관</th>
+            <th class="px-6 py-4 font-medium">분류</th>
+            <th class="px-6 py-4 font-medium min-w-[200px] w-full">제목 및 개요</th>
+            <th class="px-6 py-4 font-medium whitespace-nowrap">담당자</th>
+            <th class="px-6 py-4 font-medium whitespace-nowrap">검토 상태</th>
             <th class="px-6 py-4 font-medium whitespace-nowrap">상태</th>
-            <th class="px-6 py-4 font-medium whitespace-nowrap">일시</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
           <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-blue-50/50 transition cursor-pointer">
             <td class="px-6 py-4 text-xs font-mono font-bold text-blue-600">{{ d.receiptNo }}</td>
-            <td class="px-6 py-4 text-sm font-semibold text-gray-800">{{ d.title }}</td>
-            <td class="px-6 py-4 text-sm text-gray-500">{{ d.senderOrg }}</td>
+            <td class="px-6 py-4 text-xs text-gray-500">{{ d.categoryName || '-' }}</td>
+            <td class="px-6 py-4 whitespace-normal">
+              <p class="text-sm font-semibold text-gray-800 line-clamp-1">{{ d.title }}</p>
+              <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm text-gray-700 font-medium">{{ d.assigneeName || '미배정' }}</span>
+                <span v-if="d.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded border" :class="d.assigneeReadAt ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'">
+                  {{ d.assigneeReadAt ? '읽음' : '미확인' }}
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-1 flex-wrap">
+                <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-xs text-gray-400">-</span>
+                <span v-for="(step, idx) in d.reviewSteps" :key="idx" 
+                      class="px-1.5 py-0.5 text-[10px] rounded border"
+                      :class="step.isRead ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'"
+                      :title="step.label + ': ' + (step.isRead ? '확인완료' : '미확인')">
+                  {{ step.level }}차
+                </span>
+              </div>
+            </td>
             <td class="px-6 py-4">
               <span class="px-2.5 py-1 text-xs font-semibold rounded-lg" :class="{
                 'bg-gray-100 text-gray-600': d.status === '접수대기',
@@ -62,7 +85,6 @@
                 'bg-green-50 text-green-700': d.status === '완료'
               }">{{ d.status }}</span>
             </td>
-            <td class="px-6 py-4 text-xs text-gray-400">{{ formatDate(d.receiptDate) }}</td>
           </tr>
         </tbody>
       </table>

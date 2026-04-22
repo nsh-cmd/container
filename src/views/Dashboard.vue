@@ -48,7 +48,14 @@
                   <p class="text-sm font-semibold text-gray-800 line-clamp-1">{{ d.title }}</p>
                   <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
                 </td>
-                <td class="px-4 py-3 text-sm text-gray-700 font-medium">{{ d.assigneeName || '미배정' }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-sm text-gray-700 font-medium">{{ d.assigneeName || '미배정' }}</span>
+                    <span v-if="d.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded border" :class="d.assigneeReadAt ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'">
+                      {{ d.assigneeReadAt ? '읽음' : '미확인' }}
+                    </span>
+                  </div>
+                </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-1 flex-wrap">
                     <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-xs text-gray-400">-</span>
