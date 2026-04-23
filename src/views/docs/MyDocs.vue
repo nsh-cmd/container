@@ -100,7 +100,8 @@ const loadData = async () => {
 }
 
 const isUnread = (d) => {
-  const email = authStore.user.email
+  const email = authStore.user?.email
+  if (!email) return false
   if (d.assigneeEmail === email) {
     return !d.assigneeReadAt
   }

@@ -46,7 +46,7 @@ service cloud.firestore {
         request.resource.data.title != null;
 
       allow update: if request.auth != null && 
-        (isReceiver() || isAdmin() || resource.data.assigneeEmail == request.auth.token.email) &&
+        (isReceiver() || isAdmin() || isReviewer() || resource.data.assigneeEmail == request.auth.token.email) &&
         (request.resource.data.receiptUserEmail == resource.data.receiptUserEmail);
 
       allow delete: if isAdmin();

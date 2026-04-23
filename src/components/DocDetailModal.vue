@@ -146,6 +146,33 @@
         </button>
       </div>
     </div>
+
+    <!-- 커스텀 다이얼로그 -->
+    <div v-if="dialog.show" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" 
+                 :class="dialog.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
+              <svg v-if="dialog.type === 'error'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              <svg v-else class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900">{{ dialog.title }}</h3>
+          </div>
+          <p class="text-sm text-gray-600 mb-6 leading-relaxed">{{ dialog.message }}</p>
+          
+          <div class="flex justify-end gap-2">
+            <button v-if="dialog.isConfirm" @click="dialog.onCancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
+              취소
+            </button>
+            <button @click="dialog.onConfirm" class="px-4 py-2 text-white text-sm font-semibold rounded-xl transition shadow-sm"
+                    :class="dialog.type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'">
+              확인
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -203,31 +230,74 @@ const canApproveReview = computed(() => {
   return prevSteps.every(s => s.isApproved)
 })
 
+// 커스텀 다이얼로그 상태 관리
+const dialog = ref({
+  show: false,
+  title: '',
+  message: '',
+  type: 'info', // 'info' | 'error'
+  isConfirm: false,
+  onConfirm: () => {},
+  onCancel: () => {}
+})
+
+const showConfirm = (title, message) => {
+  return new Promise((resolve) => {
+    dialog.value = {
+      show: true,
+      title,
+      message,
+      type: 'info',
+      isConfirm: true,
+      onConfirm: () => { dialog.value.show = false; resolve(true) },
+      onCancel: () => { dialog.value.show = false; resolve(false) }
+    }
+  })
+}
+
+const showAlert = (title, message, type = 'info') => {
+  return new Promise((resolve) => {
+    dialog.value = {
+      show: true,
+      title,
+      message,
+      type,
+      isConfirm: false,
+      onConfirm: () => { dialog.value.show = false; resolve() },
+      onCancel: () => { dialog.value.show = false; resolve() }
+    }
+  })
+}
+
 const isProcessing = ref(false)
 
 const requestReview = async () => {
-  if (!confirm('검토자에게 검토를 요청하시겠습니까?')) return
+  const confirmed = await showConfirm('검토 요청', '지정된 검토자에게 검토를 요청하시겠습니까?')
+  if (!confirmed) return
+  
   isProcessing.value = true
   try {
     const dRef = doc(db, 'documents', props.docData.id)
     const updates = {
-      status: '처리중', // 상태는 유지하되, reviewRequestedAt로 플래그 처리
+      status: '처리중',
       reviewRequestedAt: new Date()
     }
     await updateDoc(dRef, updates)
     Object.assign(props.docData, updates)
     emit('updated')
-    alert('검토 요청이 완료되었습니다.')
+    await showAlert('요청 완료', '성공적으로 검토 요청이 전송되었습니다.')
   } catch (e) {
     console.error(e)
-    alert('오류가 발생했습니다.')
+    await showAlert('권한 또는 네트워크 오류', '처리에 실패했습니다. 읽기/쓰기 권한이 없거나 네트워크 연결이 불안정합니다.', 'error')
   } finally {
     isProcessing.value = false
   }
 }
 
 const completeDoc = async () => {
-  if (!confirm('문서 처리를 완료하시겠습니까?')) return
+  const confirmed = await showConfirm('처리 완료', '이 문서의 처리를 최종 완료하시겠습니까?')
+  if (!confirmed) return
+  
   isProcessing.value = true
   try {
     const dRef = doc(db, 'documents', props.docData.id)
@@ -238,17 +308,19 @@ const completeDoc = async () => {
     await updateDoc(dRef, updates)
     Object.assign(props.docData, updates)
     emit('updated')
-    alert('처리가 완료되었습니다.')
+    await showAlert('처리 완료', '문서 처리가 최종 완료되었습니다.')
   } catch (e) {
     console.error(e)
-    alert('오류가 발생했습니다.')
+    await showAlert('오류 발생', '문서 상태를 업데이트하는 데 실패했습니다. 관리자에게 문의하세요.', 'error')
   } finally {
     isProcessing.value = false
   }
 }
 
 const approveReview = async (idx) => {
-  if (!confirm('해당 문서를 확인 및 승인하시겠습니까?')) return
+  const confirmed = await showConfirm('검토 승인', '내용을 모두 확인하였으며, 승인하시겠습니까?')
+  if (!confirmed) return
+  
   isProcessing.value = true
   try {
     const reviewSteps = [...props.docData.reviewSteps]
@@ -265,10 +337,10 @@ const approveReview = async (idx) => {
     await updateDoc(dRef, updates)
     Object.assign(props.docData, updates)
     emit('updated')
-    alert('승인 처리되었습니다.')
+    await showAlert('승인 완료', '정상적으로 검토 및 승인 처리되었습니다.')
   } catch (e) {
     console.error(e)
-    alert('오류가 발생했습니다.')
+    await showAlert('승인 처리 실패', '데이터베이스 권한이 없거나 저장 중 문제가 발생했습니다.', 'error')
   } finally {
     isProcessing.value = false
   }
