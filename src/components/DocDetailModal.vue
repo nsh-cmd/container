@@ -1,13 +1,13 @@
 <template>
-  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+  <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl flex flex-col max-h-[90vh]">
       <!-- 헤더 -->
-      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
+      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
         <div>
-          <h3 class="font-bold text-gray-800 text-lg">문서 상세 정보</h3>
-          <p class="text-xs text-gray-500 font-mono mt-0.5">{{ docData.receiptNo }}</p>
+          <h3 class="font-bold text-slate-800 text-lg">문서 상세 정보</h3>
+          <p class="text-xs text-slate-500 font-mono mt-0.5">{{ docData.receiptNo }}</p>
         </div>
-        <button @click="close" class="text-gray-400 hover:text-gray-600 transition p-1">
+        <button @click="close" class="text-slate-400 hover:text-slate-600 transition p-1">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -22,7 +22,7 @@
           <div>
             <p class="text-xs text-blue-600 font-semibold mb-1">현재 상태</p>
             <span class="px-3 py-1 rounded-lg text-sm font-bold shadow-sm" :class="{
-              'bg-gray-100 text-gray-600': docData.status === '접수대기',
+              'bg-slate-100 text-slate-600': docData.status === '접수대기',
               'bg-amber-100 text-amber-700': docData.status === '배정완료',
               'bg-blue-100 text-blue-700': docData.status === '처리중',
               'bg-green-100 text-green-700': docData.status === '완료'
@@ -31,70 +31,70 @@
           <div class="text-right">
             <p class="text-xs text-blue-600 font-semibold mb-1">담당자</p>
             <div class="flex items-center justify-end gap-2">
-              <p class="text-sm font-medium text-gray-800">{{ docData.assigneeName || '미배정' }}</p>
-              <span v-if="docData.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded border" :class="docData.assigneeReadAt ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'">
+              <p class="text-sm font-medium text-slate-800">{{ docData.assigneeName || '미배정' }}</p>
+              <span v-if="docData.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded border" :class="docData.assigneeReadAt ? 'bg-green-50 text-green-600 border-green-200' : 'bg-slate-50 text-slate-400 border-slate-200'">
                 {{ docData.assigneeReadAt ? '읽음' : '미확인' }}
               </span>
             </div>
-            <p v-if="docData.assigneeReadAt" class="text-[10px] text-gray-400 mt-0.5">{{ formatDate(docData.assigneeReadAt) }}</p>
+            <p v-if="docData.assigneeReadAt" class="text-[10px] text-slate-400 mt-0.5">{{ formatDate(docData.assigneeReadAt) }}</p>
           </div>
         </div>
 
         <!-- 기본 정보 -->
         <div>
-          <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>기본 정보
           </h4>
-          <div class="grid grid-cols-2 gap-y-4 gap-x-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+          <div class="grid grid-cols-2 gap-y-4 gap-x-6 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
             <div>
-              <p class="text-xs text-gray-500 mb-1">문서 제목</p>
-              <p class="text-sm font-medium text-gray-800">{{ docData.title }}</p>
+              <p class="text-xs text-slate-500 mb-1">문서 제목</p>
+              <p class="text-sm font-medium text-slate-800">{{ docData.title }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 mb-1">문서 분류</p>
-              <p class="text-sm font-medium text-gray-800">{{ docData.categoryName || '-' }}</p>
+              <p class="text-xs text-slate-500 mb-1">문서 분류</p>
+              <p class="text-sm font-medium text-slate-800">{{ docData.categoryName || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 mb-1">발신 기관명</p>
-              <p class="text-sm font-medium text-gray-800">{{ docData.senderOrg || '-' }}</p>
+              <p class="text-xs text-slate-500 mb-1">발신 기관명</p>
+              <p class="text-sm font-medium text-slate-800">{{ docData.senderOrg || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 mb-1">발신 문서번호</p>
-              <p class="text-sm font-medium text-gray-800">{{ docData.senderDocNo || '-' }}</p>
+              <p class="text-xs text-slate-500 mb-1">발신 문서번호</p>
+              <p class="text-sm font-medium text-slate-800">{{ docData.senderDocNo || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 mb-1">접수자</p>
-              <p class="text-sm font-medium text-gray-800">{{ docData.receiptUserName || '-' }}</p>
+              <p class="text-xs text-slate-500 mb-1">접수자</p>
+              <p class="text-sm font-medium text-slate-800">{{ docData.receiptUserName || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500 mb-1">원문 접수 일시</p>
-              <p class="text-sm font-medium text-gray-800">{{ formatDate(docData.receiptDate) }}</p>
+              <p class="text-xs text-slate-500 mb-1">원문 접수 일시</p>
+              <p class="text-sm font-medium text-slate-800">{{ formatDate(docData.receiptDate) }}</p>
             </div>
           </div>
         </div>
 
         <!-- 특이사항 (비고) -->
         <div v-if="docData.note">
-          <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>특이사항 (비고)
           </h4>
-          <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-            <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ docData.note }}</p>
+          <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+            <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{{ docData.note }}</p>
           </div>
         </div>
 
         <!-- 첨부파일 -->
         <div v-if="docData.attachments && docData.attachments.length > 0">
-          <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>첨부파일
           </h4>
           <div class="space-y-2">
-            <div v-for="(file, idx) in docData.attachments" :key="idx" class="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100 hover:bg-gray-100 transition">
+            <div v-for="(file, idx) in docData.attachments" :key="idx" class="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3 border border-slate-100 hover:bg-slate-100 transition">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="text-lg shrink-0">📎</span>
                 <div class="min-w-0">
-                  <p class="text-sm font-medium text-gray-800 truncate">{{ file.name }}</p>
-                  <p class="text-[11px] text-gray-500">{{ formatFileSize(file.size) }} <span v-if="file.status === 'pending'" class="text-amber-500 ml-1">(Drive 연동 안됨)</span></p>
+                  <p class="text-sm font-medium text-slate-800 truncate">{{ file.name }}</p>
+                  <p class="text-[11px] text-slate-500">{{ formatFileSize(file.size) }} <span v-if="file.status === 'pending'" class="text-amber-500 ml-1">(Drive 연동 안됨)</span></p>
                 </div>
               </div>
             </div>
@@ -103,23 +103,23 @@
 
         <!-- 결재 흐름 -->
         <div v-if="docData.reviewSteps && docData.reviewSteps.length > 0">
-          <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <h4 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>결재 검토 흐름
           </h4>
-          <div class="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-3">
+          <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-3">
             <div v-for="step in docData.reviewSteps" :key="step.level" class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{{ step.level }}</div>
                 <div>
-                  <p class="text-sm font-semibold text-gray-800">{{ step.label }} <span class="text-xs font-normal text-gray-500 ml-1">{{ step.name || '미지정' }}</span></p>
+                  <p class="text-sm font-semibold text-slate-800">{{ step.label }} <span class="text-xs font-normal text-slate-500 ml-1">{{ step.name || '미지정' }}</span></p>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500')">
+                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500')">
                   {{ step.isApproved ? '승인 완료' : (step.isRead ? '확인 중' : '대기중') }}
                 </div>
-                <p v-if="step.isApproved && step.approvedAt" class="text-[10px] text-gray-400">승인: {{ formatDate(step.approvedAt) }}</p>
-                <p v-else-if="step.isRead && step.readAt" class="text-[10px] text-gray-400">읽음: {{ formatDate(step.readAt) }}</p>
+                <p v-if="step.isApproved && step.approvedAt" class="text-[10px] text-slate-400">승인: {{ formatDate(step.approvedAt) }}</p>
+                <p v-else-if="step.isRead && step.readAt" class="text-[10px] text-slate-400">읽음: {{ formatDate(step.readAt) }}</p>
               </div>
             </div>
           </div>
@@ -128,27 +128,27 @@
       </div>
 
       <!-- 푸터 -->
-      <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex justify-between items-center">
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl flex justify-between items-center">
         <div class="flex gap-2">
           <!-- 처리 도구 버튼들 -->
-          <button v-if="canRequestReview" @click="requestReview" :disabled="isProcessing" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-sm disabled:opacity-50">
+          <button v-if="canRequestReview" @click="requestReview" :disabled="isProcessing" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition shadow-sm disabled:opacity-50">
             {{ isProcessing ? '처리중...' : '검토 요청' }}
           </button>
-          <button v-if="canComplete" @click="completeDoc" :disabled="isProcessing" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 transition shadow-sm disabled:opacity-50">
+          <button v-if="canComplete" @click="completeDoc" :disabled="isProcessing" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition shadow-sm disabled:opacity-50">
             {{ isProcessing ? '처리중...' : '처리 완료' }}
           </button>
-          <button v-if="canApproveReview" @click="approveReview(myReviewStepIndex)" :disabled="isProcessing" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 transition shadow-sm disabled:opacity-50">
+          <button v-if="canApproveReview" @click="approveReview(myReviewStepIndex)" :disabled="isProcessing" class="bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 transition shadow-sm disabled:opacity-50">
             {{ isProcessing ? '처리중...' : '검토 승인' }}
           </button>
         </div>
-        <button @click="close" class="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition shadow-sm">
+        <button @click="close" class="bg-white border border-slate-300 text-slate-700 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50 transition shadow-sm">
           닫기
         </button>
       </div>
     </div>
 
     <!-- 커스텀 다이얼로그 -->
-    <div v-if="dialog.show" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+    <div v-if="dialog.show" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all">
         <div class="p-6">
           <div class="flex items-center gap-3 mb-4">
@@ -157,12 +157,12 @@
               <svg v-if="dialog.type === 'error'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
               <svg v-else class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900">{{ dialog.title }}</h3>
+            <h3 class="text-lg font-bold text-slate-900">{{ dialog.title }}</h3>
           </div>
-          <p class="text-sm text-gray-600 mb-6 leading-relaxed">{{ dialog.message }}</p>
+          <p class="text-sm text-slate-600 mb-6 leading-relaxed">{{ dialog.message }}</p>
           
           <div class="flex justify-end gap-2">
-            <button v-if="dialog.isConfirm" @click="dialog.onCancel" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
+            <button v-if="dialog.isConfirm" @click="dialog.onCancel" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition">
               취소
             </button>
             <button @click="dialog.onConfirm" class="px-4 py-2 text-white text-sm font-semibold rounded-xl transition shadow-sm"

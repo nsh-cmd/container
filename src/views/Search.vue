@@ -5,17 +5,17 @@
       <p class="text-sm text-gray-500 mt-1">키워드, 날짜, 분류 등의 복합 조건을 통해 문서를 조회합니다.</p>
     </header>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-      <form @submit.prevent="doSearch" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 p-7 mb-8">
+      <form @submit.prevent="doSearch" class="grid grid-cols-1 md:grid-cols-4 gap-5">
         <div class="md:col-span-2">
-          <label class="text-xs font-semibold text-gray-600 block mb-1">검색어 (제목, 발신기관, 번호)</label>
-          <input v-model="filters.keyword" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="검색어를 입력하세요">
+          <label class="text-[13px] font-bold text-slate-600 block mb-1.5">검색어 (제목, 발신기관, 번호)</label>
+          <input v-model="filters.keyword" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm" placeholder="검색어를 입력하세요">
         </div>
         
         <!-- 날짜 필터 생략 (클라이언트 필터) -->
         <div>
-          <label class="text-xs font-semibold text-gray-600 block mb-1">상태</label>
-          <select v-model="filters.status" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          <label class="text-[13px] font-bold text-slate-600 block mb-1.5">상태</label>
+          <select v-model="filters.status" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm">
             <option value="">전체 상태</option>
             <option value="접수대기">접수대기</option>
             <option value="배정완료">배정완료</option>
@@ -25,8 +25,8 @@
         </div>
 
         <div>
-           <label class="text-xs font-semibold text-gray-600 block mb-1">&nbsp;</label>
-           <button type="submit" class="w-full bg-blue-600 text-white rounded-xl py-2.5 font-bold hover:bg-blue-700 transition" :disabled="loading">
+           <label class="text-[13px] font-bold text-slate-600 block mb-1.5">&nbsp;</label>
+           <button type="submit" class="w-full bg-indigo-600 text-white rounded-xl py-2.5 text-[14px] font-bold hover:bg-indigo-700 transition-all shadow-sm shadow-indigo-600/20" :disabled="loading">
              {{ loading ? '검색 중...' : '조회하기' }}
            </button>
         </div>
@@ -34,55 +34,56 @@
     </div>
 
     <!-- 검색 결과 -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div v-if="loading" class="p-12 text-center text-gray-400">데이터를 불러오는 중입니다...</div>
-      <div v-else-if="!hasSearched" class="p-12 text-center text-gray-400">검색 조건을 입력한 뒤 조회버튼을 눌러주세요.</div>
-      <div v-else-if="results.length === 0" class="p-12 text-center text-gray-500 font-medium">일치하는 문서가 없습니다.</div>
+    <div class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 overflow-hidden">
+      <div v-if="loading" class="p-12 text-center text-slate-400 text-[14px]">데이터를 불러오는 중입니다...</div>
+      <div v-else-if="!hasSearched" class="p-12 text-center text-slate-400 text-[14px]">검색 조건을 입력한 뒤 조회버튼을 눌러주세요.</div>
+      <div v-else-if="results.length === 0" class="p-12 text-center text-slate-500 font-bold text-[14px]">일치하는 문서가 없습니다.</div>
       
-      <table v-else class="w-full text-left">
+      <table v-else class="w-full text-left whitespace-nowrap">
         <thead>
-          <tr class="bg-gray-50 text-xs text-gray-500 border-b border-gray-100 uppercase tracking-wider">
-            <th class="px-6 py-4 font-medium min-w-[120px]">접수번호</th>
-            <th class="px-6 py-4 font-medium">분류</th>
-            <th class="px-6 py-4 font-medium min-w-[200px] w-full">제목 및 개요</th>
-            <th class="px-6 py-4 font-medium whitespace-nowrap">담당자</th>
-            <th class="px-6 py-4 font-medium whitespace-nowrap">검토 상태</th>
-            <th class="px-6 py-4 font-medium whitespace-nowrap">상태</th>
+          <tr class="text-[12px] text-slate-400 border-b border-slate-100 uppercase tracking-wider bg-slate-50/50">
+            <th class="px-7 py-4 font-semibold min-w-[120px]">접수번호</th>
+            <th class="px-7 py-4 font-semibold">분류</th>
+            <th class="px-7 py-4 font-semibold min-w-[200px] w-full">제목 및 개요</th>
+            <th class="px-7 py-4 font-semibold whitespace-nowrap">담당자</th>
+            <th class="px-7 py-4 font-semibold whitespace-nowrap">검토 상태</th>
+            <th class="px-7 py-4 font-semibold whitespace-nowrap">상태</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-50">
-          <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-blue-50/50 transition cursor-pointer">
-            <td class="px-6 py-4 text-xs font-mono font-bold text-blue-600">{{ d.receiptNo }}</td>
-            <td class="px-6 py-4 text-xs text-gray-500">{{ d.categoryName || '-' }}</td>
-            <td class="px-6 py-4 whitespace-normal">
-              <p class="text-sm font-semibold text-gray-800 line-clamp-1">{{ d.title }}</p>
-              <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
+        <tbody class="divide-y divide-slate-50">
+          <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+            <td class="px-7 py-4 text-[13px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</td>
+            <td class="px-7 py-4 text-[13px] text-slate-500">{{ d.categoryName || '-' }}</td>
+            <td class="px-7 py-4 whitespace-normal">
+              <p class="text-[14px] font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ d.title }}</p>
+              <p class="text-[12px] text-slate-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
             </td>
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-1.5">
-                <span class="text-sm text-gray-700 font-medium">{{ d.assigneeName || '미배정' }}</span>
-                <span v-if="d.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded border" :class="d.assigneeReadAt ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'">
+            <td class="px-7 py-4">
+              <div class="flex items-center gap-2">
+                <span class="text-[13px] text-slate-700 font-semibold">{{ d.assigneeName || '미배정' }}</span>
+                <span v-if="d.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded-md border font-medium" :class="d.assigneeReadAt ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-200'">
                   {{ d.assigneeReadAt ? '읽음' : '미확인' }}
                 </span>
               </div>
             </td>
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-1 flex-wrap">
-                <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-xs text-gray-400">-</span>
+            <td class="px-7 py-4">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-[12px] text-slate-400">-</span>
                 <span v-for="(step, idx) in d.reviewSteps" :key="idx" 
-                      class="px-1.5 py-0.5 text-[10px] rounded border"
-                      :class="step.isApproved ? 'bg-green-50 text-green-600 border-green-200' : (step.isRead ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-400 border-gray-200')"
+                      class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
+                      :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')"
                       :title="step.label + ': ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
                   {{ step.level }}차
                 </span>
               </div>
             </td>
-            <td class="px-6 py-4">
-              <span class="px-2.5 py-1 text-xs font-semibold rounded-lg" :class="{
-                'bg-gray-100 text-gray-600': d.status === '접수대기',
-                'bg-amber-50 text-amber-600': d.status === '배정완료',
-                'bg-blue-50 text-blue-600': d.status === '처리중',
-                'bg-green-50 text-green-700': d.status === '완료'
+            <td class="px-7 py-4">
+              <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg" :class="{
+                'bg-slate-100 text-slate-600': d.status === '접수대기',
+                'bg-amber-100 text-amber-700': d.status === '배정완료',
+                'bg-indigo-100 text-indigo-700': d.status === '처리중',
+                'bg-emerald-100 text-emerald-700': d.status === '완료',
+                'bg-indigo-100 text-indigo-700': d.status === '검토중'
               }">{{ d.status }}</span>
             </td>
           </tr>

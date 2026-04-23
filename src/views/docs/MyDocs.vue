@@ -5,31 +5,31 @@
       <p class="text-sm text-gray-500 mt-1">배정받았거나 검토해야 할 문서 목록입니다.</p>
     </header>
 
-    <div v-if="loading" class="text-center py-10 text-gray-400">데이터를 불러오는 중입니다...</div>
+    <div v-if="loading" class="text-center py-10 text-slate-400 text-[14px]">데이터를 불러오는 중입니다...</div>
     
-    <div v-else-if="docs.length === 0" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
-      <div class="text-4xl mb-4 text-gray-300">📄</div>
-      <p class="text-gray-500 font-medium">현재 배정된 문서가 없습니다.</p>
+    <div v-else-if="docs.length === 0" class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 p-20 text-center">
+      <div class="text-5xl mb-5 text-slate-200">📄</div>
+      <p class="text-slate-400 font-bold text-[15px]">현재 배정된 문서가 없습니다.</p>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="d in docs" :key="d.id" @click="openDoc(d)" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md hover:border-blue-200 cursor-pointer transition transform hover:-translate-y-1">
-        <div class="space-y-3 relative">
+      <div v-for="d in docs" :key="d.id" @click="openDoc(d)" class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 p-7 flex flex-col justify-between hover:shadow-lg hover:-translate-y-1 hover:border-indigo-200 cursor-pointer transition-all duration-300">
+        <div class="space-y-3.5 relative">
           <!-- Unread Indicator -->
-          <div v-if="isUnread(d)" class="absolute -top-2 -right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+          <div v-if="isUnread(d)" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse"></div>
 
           <div class="flex items-center gap-2">
-            <span class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{{ d.receiptNo }}</span>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded" :class="getStatusClass(d.status)">{{ d.status }}</span>
+            <span class="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{{ d.receiptNo }}</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md" :class="getStatusClass(d.status)">{{ d.status }}</span>
           </div>
-          <h3 class="font-bold text-gray-900 text-base leading-snug line-clamp-2 h-11">{{ d.title }}</h3>
-          <p class="text-xs text-gray-500 line-clamp-1">발신: {{ d.senderOrg }}</p>
+          <h3 class="font-bold text-slate-800 text-[16px] leading-snug line-clamp-2">{{ d.title }}</h3>
+          <p class="text-[13px] text-slate-500 line-clamp-1">발신: {{ d.senderOrg }}</p>
         </div>
         
-        <div class="pt-4 mt-4 border-t border-gray-50 text-xs text-gray-400 flex justify-between">
+        <div class="pt-5 mt-5 border-t border-slate-50 text-[12px] text-slate-400 flex justify-between items-center">
           <span>배정일시: {{ formatDate(d.assignedAt) }}</span>
-          <span v-if="!isUnread(d)" class="text-green-600 font-medium flex items-center gap-1">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+          <span v-if="!isUnread(d)" class="text-emerald-500 font-bold flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
             읽음
           </span>
         </div>
@@ -159,11 +159,12 @@ const openDoc = async (d) => {
 
 const getStatusClass = (s) => {
   return {
-    '접수대기': 'bg-gray-100 text-gray-600',
-    '배정완료': 'bg-amber-50 text-amber-600',
-    '처리중': 'bg-blue-50 text-blue-600',
-    '완료': 'bg-green-50 text-green-700'
-  }[s] || 'bg-gray-100'
+    '접수대기': 'bg-slate-100 text-slate-600',
+    '배정완료': 'bg-amber-100 text-amber-700',
+    '처리중': 'bg-indigo-100 text-indigo-700',
+    '검토중': 'bg-indigo-100 text-indigo-700',
+    '완료': 'bg-emerald-100 text-emerald-700'
+  }[s] || 'bg-slate-100'
 }
 
 const formatDate = (dateObj) => {
