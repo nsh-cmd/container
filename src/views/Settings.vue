@@ -62,7 +62,7 @@
             <li>생성된 <strong>Webhook URL</strong>을 복사하여 아래에 붙여넣기</li>
           </ol>
         </div>
-        <div class="p-6">
+        <div class="p-6 border-b border-gray-50">
           <label class="text-xs font-semibold text-gray-600 block mb-1">Slack Webhook URL</label>
           <div class="flex gap-2">
             <input v-model="slackWebhookUrl" class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="https://hooks.slack.com/services/...">
@@ -72,6 +72,31 @@
             <button @click="saveSlack" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">저장</button>
           </div>
           <p v-if="slackTestResult" class="text-xs mt-2" :class="slackTestResult.ok ? 'text-green-600' : 'text-red-500'">{{ slackTestResult.message }}</p>
+        </div>
+
+        <!-- 슬랙 알림 메시지 템플릿 에디터 -->
+        <div class="p-6 bg-gray-50/30">
+          <label class="text-sm font-bold text-gray-800 block mb-3">알림 메시지 템플릿 설정</label>
+          
+          <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex-1 space-y-3">
+              <div class="flex flex-wrap gap-2">
+                <button @click="insertVariable('{title}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {title}</button>
+                <button @click="insertVariable('{receiptNo}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {receiptNo}</button>
+                <button @click="insertVariable('{assigneeName}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {assigneeName}</button>
+                <button @click="insertVariable('{senderOrg}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {senderOrg}</button>
+                <button @click="insertVariable('{attachments}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {attachments}</button>
+              </div>
+              <textarea v-model="slackTemplate" ref="slackTemplateInput" rows="5" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" placeholder="템플릿을 입력하세요..."></textarea>
+            </div>
+            
+            <div class="flex-1">
+              <p class="text-xs font-semibold text-gray-500 mb-2">👀 미리보기</p>
+              <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm h-full whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">
+                {{ previewSlackMessage }}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -198,7 +223,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { db } from '../firebase/config'
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore'
 import { useSettingsStore } from '../store/settings'
@@ -208,10 +233,12 @@ const settingsStore = useSettingsStore()
 const orgName = ref('')
 const facilityType = ref('')
 const slackWebhookUrl = ref('')
+const slackTemplate = ref('')
 const appsScriptUrl = ref('')
 const driveFolderId = ref('')
 const testingSlack = ref(false)
 const slackTestResult = ref(null)
+const slackTemplateInput = ref(null)
 
 const guideOpen = reactive({
   org: false,
@@ -269,6 +296,7 @@ const loadSettings = async () => {
       orgName.value = data.name || ''
       facilityType.value = data.facilityType || ''
       slackWebhookUrl.value = data.slackWebhookUrl || ''
+      slackTemplate.value = data.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {assigneeName}'
       appsScriptUrl.value = data.appsScriptUrl || ''
       driveFolderId.value = data.driveFolderId || ''
     }
@@ -307,11 +335,38 @@ const saveSlack = async () => {
   const existing = snap.exists() ? snap.data() : {}
   await setDoc(orgRef, {
     ...existing,
-    slackWebhookUrl: slackWebhookUrl.value.trim()
+    slackWebhookUrl: slackWebhookUrl.value.trim(),
+    slackTemplate: slackTemplate.value
   })
   await settingsStore.loadSettings()
   alert('Slack 설정 저장 완료')
 }
+
+const insertVariable = (variable) => {
+  if (!slackTemplateInput.value) {
+    slackTemplate.value += variable
+    return
+  }
+  const el = slackTemplateInput.value
+  const start = el.selectionStart
+  const end = el.selectionEnd
+  slackTemplate.value = slackTemplate.value.substring(0, start) + variable + slackTemplate.value.substring(end)
+  
+  setTimeout(() => {
+    el.selectionStart = el.selectionEnd = start + variable.length
+    el.focus()
+  }, 10)
+}
+
+const previewSlackMessage = computed(() => {
+  let text = slackTemplate.value || ''
+  text = text.replace(/{title}/g, '2026년도 상반기 지침 안내')
+  text = text.replace(/{receiptNo}/g, 'REC-0001')
+  text = text.replace(/{assigneeName}/g, '홍길동')
+  text = text.replace(/{senderOrg}/g, '보건복지부')
+  text = text.replace(/{attachments}/g, '안내문.pdf, 서식.hwp')
+  return text || '미리보기 텍스트가 없습니다.'
+})
 
 const testSlack = async () => {
   testingSlack.value = true

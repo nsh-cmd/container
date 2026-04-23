@@ -7,6 +7,7 @@ export const useSettingsStore = defineStore('settings', {
     orgName: '',
     facilityType: '',
     slackWebhookUrl: '',
+    slackTemplate: '',
     appsScriptUrl: '',
     driveFolderId: '',
     isInitialized: false,
@@ -21,6 +22,7 @@ export const useSettingsStore = defineStore('settings', {
           this.orgName = data.name || ''
           this.facilityType = data.facilityType || ''
           this.slackWebhookUrl = data.slackWebhookUrl || ''
+          this.slackTemplate = data.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {assigneeName}\n- 첨부파일: {attachments}'
           this.appsScriptUrl = data.appsScriptUrl || ''
           this.driveFolderId = data.driveFolderId || ''
           this.isInitialized = data.isInitialized || false
