@@ -37,7 +37,7 @@
     </div>
     
     <!-- 문서 상세 모달 -->
-    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" />
+    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" @updated="loadData" />
   </div>
 </template>
 
@@ -135,18 +135,9 @@ const openDoc = async (d) => {
     reviewSteps[stepIndex].isRead = true
     reviewSteps[stepIndex].readAt = new Date()
     updates.reviewSteps = reviewSteps
-    
-    // 최종 검토자면 자동 완료 처리
-    const isFinalReviewer = stepIndex === reviewSteps.length - 1
-    if (isFinalReviewer) {
-      updates.status = '완료'
-    } else {
-      if (updates.status !== '완료') updates.status = '처리중'
-    }
     needsUpdate = true
 
     docDataForModal.reviewSteps = reviewSteps
-    docDataForModal.status = updates.status || d.status
   }
 
   // 모달 먼저 띄우기

@@ -115,10 +115,11 @@
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="step.isRead ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'">
-                  {{ step.isRead ? '확인 완료' : '대기중' }}
+                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500')">
+                  {{ step.isApproved ? '승인 완료' : (step.isRead ? '확인 중' : '대기중') }}
                 </div>
-                <p v-if="step.isRead && step.readAt" class="text-[10px] text-gray-400">{{ formatDate(step.readAt) }}</p>
+                <p v-if="step.isApproved && step.approvedAt" class="text-[10px] text-gray-400">승인: {{ formatDate(step.approvedAt) }}</p>
+                <p v-else-if="step.isRead && step.readAt" class="text-[10px] text-gray-400">읽음: {{ formatDate(step.readAt) }}</p>
               </div>
             </div>
           </div>
@@ -127,7 +128,19 @@
       </div>
 
       <!-- 푸터 -->
-      <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl text-right">
+      <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl flex justify-between items-center">
+        <div class="flex gap-2">
+          <!-- 처리 도구 버튼들 -->
+          <button v-if="canRequestReview" @click="requestReview" :disabled="isProcessing" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-sm disabled:opacity-50">
+            {{ isProcessing ? '처리중...' : '검토 요청' }}
+          </button>
+          <button v-if="canComplete" @click="completeDoc" :disabled="isProcessing" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 transition shadow-sm disabled:opacity-50">
+            {{ isProcessing ? '처리중...' : '처리 완료' }}
+          </button>
+          <button v-if="canApproveReview" @click="approveReview(myReviewStepIndex)" :disabled="isProcessing" class="bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-green-700 transition shadow-sm disabled:opacity-50">
+            {{ isProcessing ? '처리중...' : '검토 승인' }}
+          </button>
+        </div>
         <button @click="close" class="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition shadow-sm">
           닫기
         </button>
@@ -137,7 +150,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useAuthStore } from '../store/auth'
+import { db } from '../firebase/config'
+import { doc, updateDoc } from 'firebase/firestore'
+
+const authStore = useAuthStore()
+const currentUserEmail = computed(() => authStore.user?.email)
 
 const props = defineProps({
   show: Boolean,
@@ -147,7 +166,113 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'updated'])
+
+// 액션 권한 검사 로직
+const isAssignee = computed(() => currentUserEmail.value === props.docData.assigneeEmail)
+
+const canRequestReview = computed(() => {
+  if (!isAssignee.value) return false
+  if (props.docData.status !== '처리중') return false
+  if (props.docData.reviewRequestedAt) return false
+  return props.docData.reviewSteps && props.docData.reviewSteps.length > 0
+})
+
+const canComplete = computed(() => {
+  if (!isAssignee.value) return false
+  if (props.docData.status !== '처리중') return false
+  if (props.docData.reviewRequestedAt) return false
+  return !props.docData.reviewSteps || props.docData.reviewSteps.length === 0
+})
+
+const myReviewStepIndex = computed(() => {
+  if (!props.docData.reviewSteps) return -1
+  return props.docData.reviewSteps.findIndex(s => s.email === currentUserEmail.value)
+})
+
+const canApproveReview = computed(() => {
+  const idx = myReviewStepIndex.value
+  if (idx === -1) return false
+  const step = props.docData.reviewSteps[idx]
+  if (step.isApproved) return false
+  
+  if (!props.docData.reviewRequestedAt) return false // 담당자가 아직 검토요청 안함
+  
+  // 이전 단계들이 모두 승인되어야 내 차례
+  const prevSteps = props.docData.reviewSteps.slice(0, idx)
+  return prevSteps.every(s => s.isApproved)
+})
+
+const isProcessing = ref(false)
+
+const requestReview = async () => {
+  if (!confirm('검토자에게 검토를 요청하시겠습니까?')) return
+  isProcessing.value = true
+  try {
+    const dRef = doc(db, 'documents', props.docData.id)
+    const updates = {
+      status: '처리중', // 상태는 유지하되, reviewRequestedAt로 플래그 처리
+      reviewRequestedAt: new Date()
+    }
+    await updateDoc(dRef, updates)
+    Object.assign(props.docData, updates)
+    emit('updated')
+    alert('검토 요청이 완료되었습니다.')
+  } catch (e) {
+    console.error(e)
+    alert('오류가 발생했습니다.')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+const completeDoc = async () => {
+  if (!confirm('문서 처리를 완료하시겠습니까?')) return
+  isProcessing.value = true
+  try {
+    const dRef = doc(db, 'documents', props.docData.id)
+    const updates = {
+      status: '완료',
+      completedAt: new Date()
+    }
+    await updateDoc(dRef, updates)
+    Object.assign(props.docData, updates)
+    emit('updated')
+    alert('처리가 완료되었습니다.')
+  } catch (e) {
+    console.error(e)
+    alert('오류가 발생했습니다.')
+  } finally {
+    isProcessing.value = false
+  }
+}
+
+const approveReview = async (idx) => {
+  if (!confirm('해당 문서를 확인 및 승인하시겠습니까?')) return
+  isProcessing.value = true
+  try {
+    const reviewSteps = [...props.docData.reviewSteps]
+    reviewSteps[idx].isApproved = true
+    reviewSteps[idx].approvedAt = new Date()
+    
+    const updates = { reviewSteps }
+    if (idx === reviewSteps.length - 1) {
+      updates.status = '완료'
+      updates.completedAt = new Date()
+    }
+    
+    const dRef = doc(db, 'documents', props.docData.id)
+    await updateDoc(dRef, updates)
+    Object.assign(props.docData, updates)
+    emit('updated')
+    alert('승인 처리되었습니다.')
+  } catch (e) {
+    console.error(e)
+    alert('오류가 발생했습니다.')
+  } finally {
+    isProcessing.value = false
+  }
+}
 
 const close = () => {
   emit('close')

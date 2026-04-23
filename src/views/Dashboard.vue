@@ -61,8 +61,8 @@
                     <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-xs text-gray-400">-</span>
                     <span v-for="(step, idx) in d.reviewSteps" :key="idx" 
                           class="px-1.5 py-0.5 text-[10px] rounded border"
-                          :class="step.isRead ? 'bg-green-50 text-green-600 border-green-200' : 'bg-gray-50 text-gray-400 border-gray-200'"
-                          :title="step.label + ': ' + (step.isRead ? '확인완료' : '미확인')">
+                          :class="step.isApproved ? 'bg-green-50 text-green-600 border-green-200' : (step.isRead ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-400 border-gray-200')"
+                          :title="step.label + ': ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
                       {{ step.level }}차
                     </span>
                   </div>

@@ -42,7 +42,7 @@
     </div>
 
     <!-- 문서 상세 모달 -->
-    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" />
+    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" @updated="loadData" />
   </div>
 </template>
 
