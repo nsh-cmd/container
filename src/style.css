@@ -13,3 +13,60 @@ body {
 * {
   font-family: "Pretendard", "Inter", sans-serif;
 }
+
+/* 인쇄 최적화 */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 사이드바 완전 숨김 */
+  aside {
+    display: none !important;
+  }
+
+  /* 메인 영역 전체 폭 사용 */
+  main {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .min-h-screen {
+    min-height: auto !important;
+  }
+
+  /* print:hidden 지원 (Tailwind가 안 잡힐 때 대비) */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  /* 인쇄용 테이블 스타일 */
+  table {
+    border-collapse: collapse !important;
+    font-size: 10px !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    border: 1px solid #999 !important;
+    padding: 4px 6px !important;
+    white-space: normal !important;
+  }
+
+  /* 인쇄 시 페이지 설정 */
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+}

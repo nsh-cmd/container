@@ -92,10 +92,18 @@
             <div v-for="(file, idx) in docData.attachments" :key="idx" class="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3 border border-slate-100 hover:bg-slate-100 transition">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="text-lg shrink-0">📎</span>
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-slate-800 truncate">{{ file.name }}</p>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-slate-800 truncate">
+                    <a href="#" @click.prevent="openFolder(file)" class="hover:text-blue-600 hover:underline transition" title="해당 폴더 열기">
+                      {{ file.name }}
+                    </a>
+                  </p>
                   <p class="text-[11px] text-slate-500">{{ formatFileSize(file.size) }} <span v-if="file.status === 'pending'" class="text-amber-500 ml-1">(Drive 연동 안됨)</span></p>
                 </div>
+                <!-- 폴더 열기 버튼 -->
+                <a href="#" @click.prevent="openFolder(file)" class="ml-2 p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="해당 폴더 열기">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+                </a>
               </div>
             </div>
           </div>
@@ -111,7 +119,7 @@
               <div class="flex items-center gap-3">
                 <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{{ step.level }}</div>
                 <div>
-                  <p class="text-sm font-semibold text-slate-800">{{ step.label }} <span class="text-xs font-normal text-slate-500 ml-1">{{ step.name || '미지정' }}</span></p>
+                  <p class="text-sm font-semibold text-slate-800">{{ stepTitle(step) }} <span class="text-xs font-normal text-slate-500 ml-1">({{ (step.name || '미지정').replace(/ *\(자동생략\)/, '') }})</span></p>
                 </div>
               </div>
               <div class="text-right">
@@ -185,6 +193,11 @@ import { doc, updateDoc } from 'firebase/firestore'
 const authStore = useAuthStore()
 const currentUserEmail = computed(() => authStore.user?.email)
 
+const stepTitle = (step) => {
+  const titles = { 1: '실장', 2: '국장', 3: '원장' }
+  return titles[step.level] || step.label
+}
+
 const props = defineProps({
   show: Boolean,
   docData: {
@@ -202,6 +215,10 @@ const canRequestReview = computed(() => {
   if (!isAssignee.value) return false
   if (props.docData.status !== '처리중') return false
   if (props.docData.reviewRequestedAt) return false
+  
+  // 만약 현재 담당자가 본인의 검토 차례라서 '검토 승인' 버튼이 활성화된 경우, 불필요한 '검토 요청' 버튼은 숨김
+  if (canApproveReview.value) return false
+  
   return props.docData.reviewSteps && props.docData.reviewSteps.length > 0
 })
 
@@ -223,7 +240,10 @@ const canApproveReview = computed(() => {
   const step = props.docData.reviewSteps[idx]
   if (step.isApproved) return false
   
-  if (!props.docData.reviewRequestedAt) return false // 담당자가 아직 검토요청 안함
+  // 담당자(기안자) 본인이 검토자인 경우, 검토요청 단계를 생략하고 바로 승인할 수 있도록 허용!
+  if (!props.docData.reviewRequestedAt && !isAssignee.value) {
+    return false
+  }
   
   // 이전 단계들이 모두 승인되어야 내 차례
   const prevSteps = props.docData.reviewSteps.slice(0, idx)
@@ -328,9 +348,15 @@ const approveReview = async (idx) => {
     reviewSteps[idx].approvedAt = new Date()
     
     const updates = { reviewSteps }
+    if (!props.docData.reviewRequestedAt) {
+      updates.reviewRequestedAt = new Date() // 담당자가 검토요청 없이 바로 승인한 경우 기록
+    }
+    
     if (idx === reviewSteps.length - 1) {
       updates.status = '완료'
       updates.completedAt = new Date()
+    } else {
+      updates.status = '검토중' // 아직 다음 결재자가 남은 경우 상태 변경
     }
     
     const dRef = doc(db, 'documents', props.docData.id)
@@ -364,5 +390,29 @@ const formatFileSize = (bytes) => {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+const extractFileId = (url) => {
+  if (!url) return null
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
+  return match ? match[1] : null
+}
+
+const openFolder = (file) => {
+  if (file.status === 'pending') {
+    alert('구글 드라이브와 연동되지 않은 파일입니다.')
+    return
+  }
+
+  if (props.docData.driveSubFolderId) {
+    // 1. 하위 폴더 ID가 저장된 최신 문서의 경우 (정확히 해당 폴더 열기)
+    window.open(`https://drive.google.com/drive/folders/${props.docData.driveSubFolderId}`, '_blank')
+  } else if (props.docData.driveFolderId) {
+    // 2. 과거 문서 (루트 폴더 ID만 있음) -> 구글 드라이브 검색으로 문서번호 이름의 폴더를 찾음
+    const query = encodeURIComponent(`"${props.docData.receiptNo}"`)
+    window.open(`https://drive.google.com/drive/search?q=${query}`, '_blank')
+  } else {
+    alert('연결된 구글 드라이브 폴더 정보가 없습니다.')
+  }
 }
 </script>

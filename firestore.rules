@@ -21,7 +21,7 @@ service cloud.firestore {
 
     // users 컬렉션 
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isAdmin();
+      allow read: if request.auth != null;
       allow write: if isAdmin() || request.auth.token.email == 'admin@together63.kr';
     }
 

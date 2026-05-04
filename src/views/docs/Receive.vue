@@ -23,12 +23,19 @@
           <input v-model="form.title" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="공문 제목을 정확히 입력하세요">
         </div>
 
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label class="text-xs font-semibold text-gray-600 block mb-1">문서 분류 <span class="text-red-500">*</span></label>
             <select v-model="form.category" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
               <option value="" disabled>분류를 선택하세요</option>
               <option v-for="cat in categories" :key="cat.code" :value="cat">{{ cat.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600 block mb-1">담당자 배정 <span class="text-gray-400 font-normal text-[10px]">(선택)</span></label>
+            <select v-model="form.assignee" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+              <option value="">미배정 (접수대기)</option>
+              <option v-for="u in users" :key="u.email" :value="u">{{ u.name }} ({{ u.email }})</option>
             </select>
           </div>
           <div>
@@ -82,7 +89,7 @@
         </div>
 
         <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
-          <p class="text-xs text-blue-700 leading-relaxed font-medium">📋 접수가 완료되면 시스템에 의해 자동으로 접수번호가 부여되며, 상태가 [접수대기]로 설정됩니다.</p>
+          <p class="text-xs text-blue-700 leading-relaxed font-medium">📋 접수가 완료되면 시스템에 의해 자동으로 접수번호가 부여됩니다. 담당자를 지정하면 즉시 [배정완료] 처리되며, 지정하지 않으면 [접수대기] 상태로 등록됩니다.</p>
         </div>
 
         <!-- 업로드 진행 상태 -->
@@ -124,6 +131,7 @@ const router = useRouter()
 const loading = ref(false)
 const categories = ref([])
 const reviewSteps = ref([])
+const users = ref([])
 
 // 첨부파일 관련
 const attachedFiles = ref([])
@@ -139,6 +147,7 @@ const form = ref({
   senderDocNo: '',
   title: '',
   category: '', // object { code, name }
+  assignee: '', // 담당자 배정
   receiptDate: new Date().toISOString().slice(0, 16),
   note: ''
 })
@@ -152,6 +161,9 @@ const loadSettings = async () => {
   if (flowSnap.exists() && flowSnap.data().steps) {
     reviewSteps.value = flowSnap.data().steps.map(s => ({ ...s, readAt: null, isRead: false }))
   }
+
+  const userSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer']), where('active', '==', true)))
+  users.value = userSnap.docs.map(d => d.data())
 }
 
 // --- 파일 처리 ---
@@ -234,25 +246,32 @@ const uploadFilesToDrive = async (receiptNo) => {
       const base64 = await fileToBase64(file)
       const res = await fetch(appsScriptUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           action: 'upload',
           receiptNo,
           fileName: file.name,
           fileBase64: base64,
           mimeType: file.type
-        }),
-        mode: 'no-cors'
+        })
       })
 
-      // no-cors 모드에서는 응답 body를 읽을 수 없으므로 성공으로 간주
-      uploadedFiles.push({
-        name: file.name,
-        size: file.size,
-        mimeType: file.type,
-        uploadedAt: new Date().toISOString(),
-        status: 'uploaded'
-      })
+      const responseData = await res.json()
+      
+      if (!responseData.success) {
+        throw new Error(responseData.message || '서버 오류')
+      }
+
+        uploadedFiles.push({
+          name: responseData.fileName || file.name,
+          size: file.size,
+          mimeType: file.type,
+          uploadedAt: new Date().toISOString(),
+          status: 'uploaded',
+          fileId: responseData.fileId,
+          fileUrl: responseData.fileUrl,
+          folderId: responseData.folderId // 하위 폴더 ID 저장
+        })
     } catch (err) {
       console.error(`파일 업로드 실패: ${file.name}`, err)
       uploadedFiles.push({
@@ -308,7 +327,54 @@ const submitDoc = async () => {
       }
     }
 
-    // 2. Firestore 문서 저장
+    // 2. Firestore 문서 저장 및 자동 생략 로직
+    const isAssigned = !!form.value.assignee
+    let finalReviewSteps = JSON.parse(JSON.stringify(reviewSteps.value)) // 깊은 복사
+    
+    console.log('=== [자동생략 디버그] ===')
+    console.log('isAssigned:', isAssigned)
+    console.log('assignee 전체 객체:', JSON.stringify(form.value.assignee))
+    console.log('reviewSteps 수:', finalReviewSteps.length)
+    finalReviewSteps.forEach((s, i) => {
+      console.log(`  step[${i}] email="${s.email}" name="${s.name}" level=${s.level}`)
+    })
+    
+    if (isAssigned && finalReviewSteps.length > 0) {
+      const assigneeEmail = (form.value.assignee.email || '').trim()
+      const assigneeName = (form.value.assignee.name || '').trim()
+      
+      console.log('매칭 시도 - assigneeEmail:', JSON.stringify(assigneeEmail), 'assigneeName:', JSON.stringify(assigneeName))
+      
+      let rIdx = -1
+      for (let i = finalReviewSteps.length - 1; i >= 0; i--) {
+        const stepEmail = (finalReviewSteps[i].email || '').trim()
+        const stepName = (finalReviewSteps[i].name || '').trim()
+        const emailMatch = stepEmail === assigneeEmail
+        const nameMatch = stepName === assigneeName
+        console.log(`  비교 step[${i}]: stepEmail="${stepEmail}" vs "${assigneeEmail}" => ${emailMatch}, stepName="${stepName}" vs "${assigneeName}" => ${nameMatch}`)
+        if (emailMatch || nameMatch) {
+          rIdx = i
+          console.log(`  ✅ 매칭 성공! rIdx = ${rIdx}`)
+          break
+        }
+      }
+      
+      console.log('최종 rIdx:', rIdx)
+      
+      if (rIdx > 0) {
+        for (let i = 0; i < rIdx; i++) {
+          finalReviewSteps[i].isApproved = true
+          finalReviewSteps[i].approvedAt = new Date()
+          finalReviewSteps[i].name = (finalReviewSteps[i].name || '') + ' (자동생략)'
+          console.log(`  ⏭ step[${i}] 자동생략 처리 완료`)
+        }
+      } else {
+        console.log('⚠️ 자동생략 미적용: rIdx <= 0')
+      }
+    }
+    console.log('=== [자동생략 디버그 끝] ===')
+    console.log('최종 reviewSteps:', JSON.stringify(finalReviewSteps, null, 2))
+
     const docData = {
       receiptNo,
       receiptDate: new Date(form.value.receiptDate),
@@ -320,20 +386,46 @@ const submitDoc = async () => {
       category: form.value.category.code,
       categoryName: form.value.category.name,
       note: form.value.note,
-      status: '접수대기',
-      assigneeEmail: null,
-      assigneeName: null,
-      assignedAt: null,
+      status: isAssigned ? '배정완료' : '접수대기',
+      assigneeEmail: isAssigned ? form.value.assignee.email : null,
+      assigneeName: isAssigned ? form.value.assignee.name : null,
+      assignedAt: isAssigned ? new Date() : null,
       assigneeReadAt: null,
-      reviewSteps: reviewSteps.value,
+      reviewSteps: finalReviewSteps,
       attachments: uploadedFiles,
       attachmentCount: attachedFiles.value.length,
       driveFileUrl: null,
       driveFolderId: settingsStore.driveFolderId || null,
+      driveSubFolderId: uploadedFiles.length > 0 && uploadedFiles[0].folderId ? uploadedFiles[0].folderId : null,
       createdAt: new Date()
     }
 
     await setDoc(doc(db, 'documents', receiptNo), docData)
+
+    // 슬랙 알림 전송 (통합 1회 전송)
+    if (settingsStore.slackWebhookUrl) {
+      try {
+        let text = settingsStore.slackTemplate || '🔔 새로운 문서가 접수되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 발신기관: {senderOrg}\n- 첨부파일: {attachments}'
+        text = text.replace(/{title}/g, docData.title || '')
+        text = text.replace(/{receiptNo}/g, docData.receiptNo || '')
+        text = text.replace(/{assigneeName}/g, isAssigned ? docData.assigneeName : '미배정')
+        text = text.replace(/{senderOrg}/g, docData.senderOrg || '')
+        
+        const attachmentText = (attachedFiles.value && attachedFiles.value.length > 0)
+          ? attachedFiles.value.map(f => f.name).join(', ')
+          : '첨부파일 없음'
+        text = text.replace(/{attachments}/g, attachmentText)
+
+        await fetch(settingsStore.slackWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+          mode: 'no-cors'
+        })
+      } catch (e) {
+        console.error('Slack 알림 전송 실패', e)
+      }
+    }
 
     const fileMsg = attachedFiles.value.length > 0
       ? `\n첨부파일 ${attachedFiles.value.length}개 ${settingsStore.appsScriptUrl ? '업로드됨' : '(Drive 미연동 — 메타만 기록)'}`

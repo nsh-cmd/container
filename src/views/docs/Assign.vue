@@ -99,11 +99,58 @@ const assignDoc = async (docItem) => {
 
   try {
     const docRef = doc(db, 'documents', docItem.id)
+    
+    // 검토자 직전 단계 자동 생략 로직
+    let updatedReviewSteps = docItem.reviewSteps ? JSON.parse(JSON.stringify(docItem.reviewSteps)) : []
+    
+    console.log('=== [배정 자동생략 디버그] ===')
+    console.log('selectedAssignee:', JSON.stringify(docItem.selectedAssignee))
+    console.log('reviewSteps 수:', updatedReviewSteps.length)
+    updatedReviewSteps.forEach((s, i) => {
+      console.log(`  step[${i}] email="${s.email}" name="${s.name}" level=${s.level}`)
+    })
+    
+    if (updatedReviewSteps.length > 0) {
+      const assigneeEmail = (docItem.selectedAssignee.email || '').trim()
+      const assigneeName = (docItem.selectedAssignee.name || '').trim()
+      
+      console.log('매칭 시도 - assigneeEmail:', JSON.stringify(assigneeEmail), 'assigneeName:', JSON.stringify(assigneeName))
+      
+      let reviewerIndex = -1
+      for (let i = updatedReviewSteps.length - 1; i >= 0; i--) {
+        const stepEmail = (updatedReviewSteps[i].email || '').trim()
+        const stepName = (updatedReviewSteps[i].name || '').trim()
+        const emailMatch = stepEmail === assigneeEmail
+        const nameMatch = stepName === assigneeName
+        console.log(`  비교 step[${i}]: stepEmail="${stepEmail}" vs "${assigneeEmail}" => ${emailMatch}, stepName="${stepName}" vs "${assigneeName}" => ${nameMatch}`)
+        if (emailMatch || nameMatch) {
+          reviewerIndex = i
+          console.log(`  ✅ 매칭 성공! reviewerIndex = ${reviewerIndex}`)
+          break
+        }
+      }
+      
+      console.log('최종 reviewerIndex:', reviewerIndex)
+      
+      if (reviewerIndex > 0) {
+        for (let i = 0; i < reviewerIndex; i++) {
+          updatedReviewSteps[i].isApproved = true
+          updatedReviewSteps[i].approvedAt = new Date()
+          updatedReviewSteps[i].name = (updatedReviewSteps[i].name || '') + ' (자동생략)'
+          console.log(`  ⏭ step[${i}] 자동생략 처리 완료`)
+        }
+      } else {
+        console.log('⚠️ 자동생략 미적용: reviewerIndex <= 0')
+      }
+    }
+    console.log('=== [배정 자동생략 디버그 끝] ===')
+
     await updateDoc(docRef, {
       status: '배정완료',
       assigneeEmail: docItem.selectedAssignee.email,
       assigneeName: docItem.selectedAssignee.name,
-      assignedAt: new Date()
+      assignedAt: new Date(),
+      reviewSteps: updatedReviewSteps
     })
     
     // 로컬 목록에서 제거

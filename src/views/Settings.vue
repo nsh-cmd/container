@@ -253,9 +253,9 @@ const categories = ref([
   { code: 'CAT2', name: '간호/의료', active: true }
 ])
 const reviewSteps = ref([
-  { level: 1, label: '1차 검토자', email: '', name: '' },
-  { level: 2, label: '2차 검토자', email: '', name: '' },
-  { level: 3, label: '최종 검토자', email: '', name: '' }
+  { level: 1, label: '실장', email: '', name: '' },
+  { level: 2, label: '국장', email: '', name: '' },
+  { level: 3, label: '원장', email: '', name: '' }
 ])
 
 // 사용자 관리에서 등록된 직원 목록

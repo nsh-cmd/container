@@ -68,8 +68,8 @@
                     <span v-for="(step, idx) in d.reviewSteps" :key="idx" 
                           class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
                           :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')"
-                          :title="step.label + ': ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
-                      {{ step.level }}차
+                          :title="stepTitle(step) + '(' + (step.name || '미지정') + ') ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
+                      {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
                     </span>
                   </div>
                 </td>
@@ -108,6 +108,11 @@ const recentDocs = ref([])
 
 const goToSearch = (doc) => {
   router.push({ path: '/search', query: { q: doc.receiptNo } })
+}
+
+const stepTitle = (step) => {
+  const titles = { 1: '실장', 2: '국장', 3: '원장' }
+  return titles[step.level] || step.label
 }
 
 const userInitial = computed(() => {

@@ -280,7 +280,7 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abcdef</pre>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { db } from '../firebase/config'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { useSettingsStore } from '../store/settings'
 
 const router = useRouter()
@@ -414,7 +414,8 @@ function handleFileUpload(data) {
     success: true,
     fileId: file.getId(),
     fileUrl: file.getUrl(),
-    fileName: file.getName()
+    fileName: file.getName(),
+    folderId: targetFolder.getId()
   };
 }
 
@@ -462,8 +463,7 @@ const testFirebase = async () => {
   firebaseTestResult.value = null
   try {
     // Firestore에 간단한 읽기 시도로 연결 확인
-    const { doc: fbDoc, getDoc } = await import('firebase/firestore')
-    await getDoc(fbDoc(db, 'settings', 'orgInfo'))
+    await getDoc(doc(db, 'settings', 'orgInfo'))
     firebaseTestResult.value = { ok: true, message: 'Firestore 연결 성공! 정상적으로 작동합니다.' }
   } catch (e) {
     console.error('Firebase 연결 테스트 실패:', e)

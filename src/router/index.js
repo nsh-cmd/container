@@ -7,6 +7,7 @@ import Settings from '../views/Settings.vue'
 import Receive from '../views/docs/Receive.vue'
 import Assign from '../views/docs/Assign.vue'
 import MyDocs from '../views/docs/MyDocs.vue'
+import Register from '../views/docs/Register.vue'
 import Search from '../views/Search.vue'
 import SetupWizard from '../views/SetupWizard.vue'
 
@@ -24,6 +25,7 @@ const routes = [
       { path: 'receive', name: 'Receive', component: Receive },
       { path: 'assign', name: 'Assign', component: Assign },
       { path: 'mydocs', name: 'MyDocs', component: MyDocs },
+      { path: 'register', name: 'Register', component: Register },
       { path: 'search', name: 'Search', component: Search }
     ]
   },

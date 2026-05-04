@@ -81,7 +81,15 @@ const loadData = async () => {
       snapAll.docs.forEach(d => {
         const data = d.data()
         const isAssignee = data.assigneeEmail === userEmail
-        const isReviewer = (data.reviewSteps || []).some(s => s.email === userEmail)
+        
+        let isReviewer = false
+        if (data.reviewSteps && data.reviewRequestedAt) {
+          const myIdx = data.reviewSteps.findIndex(s => s.email === userEmail)
+          if (myIdx !== -1) {
+            // 내 이전 단계들이 모두 승인되어야 내 목록에 보임
+            isReviewer = data.reviewSteps.slice(0, myIdx).every(s => s.isApproved)
+          }
+        }
         
         if (isAssignee || isReviewer) {
           data.assignedAt = data.assignedAt?.toDate?.() || data.assignedAt
@@ -105,9 +113,15 @@ const isUnread = (d) => {
   if (d.assigneeEmail === email) {
     return !d.assigneeReadAt
   }
-  const myReviewStep = (d.reviewSteps || []).find(s => s.email === email)
-  if (myReviewStep) {
-    return !myReviewStep.isRead
+  
+  if (d.reviewSteps && d.reviewRequestedAt) {
+    const myIdx = d.reviewSteps.findIndex(s => s.email === email)
+    if (myIdx !== -1) {
+      const isMyTurn = d.reviewSteps.slice(0, myIdx).every(s => s.isApproved)
+      if (isMyTurn) {
+        return !d.reviewSteps[myIdx].isRead
+      }
+    }
   }
   return false
 }

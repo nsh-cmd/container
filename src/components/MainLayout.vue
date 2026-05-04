@@ -67,6 +67,7 @@ const menus = [
   { path: '/receive', name: '문서 접수', icon: '📥', roles: ['admin', 'receiver'] },
   { path: '/assign', name: '배정 관리', icon: '📋', roles: ['admin', 'receiver'] },
   { path: '/mydocs', name: '내 문서함', icon: '📄', roles: ['reviewer', 'user'] },
+  { path: '/register', name: '문서접수대장', icon: '📒', roles: ['admin', 'receiver', 'reviewer', 'user'] },
   { path: '/search', name: '문서 검색', icon: '🔍', roles: ['admin', 'receiver', 'reviewer', 'user'] },
   { path: '/users', name: '사용자 관리', icon: '👥', roles: ['admin'] },
   { path: '/settings', name: '설정', icon: '⚙️', roles: ['admin'] }
