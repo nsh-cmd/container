@@ -33,7 +33,7 @@
               <div class="bg-white border border-indigo-100 rounded-xl px-4 py-3 font-mono text-[11px] text-indigo-800 space-y-1">
                 <div>① GitHub에서 코드 받기 (git clone)</div>
                 <div>② 자신의 Firebase 프로젝트 생성</div>
-                <div>③ .env 파일에 Firebase 설정값 입력</div>
+                <div>③ <span class="text-red-600 font-bold">.env 파일에 Firebase 설정값 입력 ← 빌드 전 필수!</span></div>
                 <div>④ 빌드(npm run build) → 배포(firebase deploy)</div>
                 <div>⑤ 앱 접속 → 이 초기설정 페이지에서 완료</div>
               </div>
@@ -114,7 +114,13 @@ npm install                      ← 패키지 설치 (수분 소요)</pre>
 
             <!-- STEP 4: Firebase + .env -->
             <div class="px-6 py-4 space-y-3">
-              <p class="font-bold text-sm text-gray-800">STEP 4. Firebase 프로젝트 생성 및 .env 파일 설정</p>
+              <p class="font-bold text-sm text-gray-800">STEP 4. Firebase 프로젝트 생성 및 .env 파일 설정 <span class="text-red-500">(필수)</span></p>
+
+              <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-800 text-[11px] space-y-1">
+                <p class="font-bold">⚠️ 이 단계는 반드시 빌드(STEP 5) 전에 완료해야 합니다.</p>
+                <p>.env 파일 없이 빌드하면 앱이 Firebase에 연결되지 않아 <strong>흰 화면 또는 로딩 오류</strong>가 발생합니다.<br>앱에 접속해야 설정값을 입력할 수 있는 구조이므로, <strong>빌드 전 .env 설정이 필수</strong>입니다.</p>
+              </div>
+
               <div class="space-y-1">
                 <p class="font-semibold text-gray-700">① Firebase 프로젝트 생성</p>
                 <ol class="list-decimal list-inside space-y-1 text-gray-600 ml-2">
@@ -133,17 +139,17 @@ npm install                      ← 패키지 설치 (수분 소요)</pre>
                 </ol>
               </div>
               <div class="space-y-1">
-                <p class="font-semibold text-gray-700">③ .env 파일 작성 (코드 루트 폴더에 생성)</p>
+                <p class="font-semibold text-gray-700">③ .env 파일 작성 — 코드 루트 폴더(<code class="bg-gray-100 px-1 rounded">container/</code>) 안에 생성</p>
                 <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-3 text-[11px] font-mono leading-relaxed">VITE_FIREBASE_API_KEY=AIzaSy...
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your-project-id
 VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123:web:abcdef
-VITE_ADMIN_EMAIL=admin@yourdomain.com</pre>
-                <div class="bg-red-50 border border-red-100 rounded-xl px-4 py-2 text-red-700 space-y-1">
-                  <p>⚠️ <strong>.env 파일은 GitHub에 올라가지 않습니다.</strong> 각자 직접 작성해야 합니다.</p>
-                  <p>⚠️ Windows 메모장 저장 시 파일명을 <code class="bg-red-100 px-1 rounded">".env"</code> (따옴표 포함)로 입력해야 확장자 없이 저장됩니다.</p>
+VITE_FIREBASE_APP_ID=1:123:web:abcdef</pre>
+                <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 text-amber-800 space-y-1.5 text-[11px]">
+                  <p>⚠️ <strong>.env 파일은 GitHub에 올라가지 않습니다.</strong> 배포할 때마다 직접 작성해야 합니다.</p>
+                  <p>⚠️ Windows 메모장으로 저장 시, 파일명 입력란에 <code class="bg-amber-100 px-1 rounded">".env"</code> <strong>(따옴표 포함)</strong>으로 입력해야 확장자 없이 저장됩니다.</p>
+                  <p>💡 배포 완료 후 앱 초기설정 페이지의 <strong>Firebase 연결 설정</strong>에서 값을 수정할 수 있습니다 (파일 재편집 불필요).</p>
                 </div>
               </div>
             </div>
@@ -182,7 +188,8 @@ firebase deploy --only hosting,firestore:rules</pre>
                   <p class="font-semibold text-gray-700 mb-1">점검 체크리스트</p>
                   <ul class="space-y-1 text-gray-500">
                     <li>☐ Node.js v18 이상 설치됨</li>
-                    <li>☐ .env 파일이 코드 루트 폴더에 있음</li>
+                    <li class="text-red-600 font-semibold">☐ .env 파일이 container/ 폴더 안에 있음 (필수)</li>
+                    <li class="text-red-600 font-semibold">☐ .env의 6개 값이 모두 채워져 있음 (필수)</li>
                     <li>☐ Firebase Auth 이메일/비밀번호 활성화</li>
                     <li>☐ Firestore 데이터베이스 생성됨</li>
                     <li>☐ firebase deploy에 firestore:rules 포함</li>

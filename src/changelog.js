@@ -1,7 +1,17 @@
-export const APP_VERSION = '1.9.1'
+export const APP_VERSION = '1.9.2'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.9.2',
+    date: '2026.05.06',
+    changes: [
+      '배포 메뉴얼 STEP 4 .env 설정을 필수 항목으로 명확히 변경 (빌드 전 필수 경고 추가)',
+      '.env 없이 빌드 시 앱 로딩 불가 원인 안내 및 배포 순서 오해 방지 문구 추가',
+      '배포 개요 ③번 항목에 빌드 전 필수 강조 표시 추가',
+      '점검 체크리스트에 .env 파일 존재 여부·6개 값 입력 완료 항목 필수 표시로 추가',
+    ]
+  },
   {
     version: '1.9.1',
     date: '2026.05.06',
