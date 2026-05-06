@@ -1,7 +1,18 @@
-export const APP_VERSION = '1.7.0'
+export const APP_VERSION = '1.8.0'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.8.0',
+    date: '2026.05.06',
+    changes: [
+      '모바일 화면 최적화: 대시보드 최근 문서 카드뷰 추가 (테이블 가로 스크롤 해소)',
+      '모바일 여백 통일: 전체 페이지 p-8 → p-4 md:p-8 반응형 패딩 적용',
+      '문서 접수 2열 그리드 수정: 발신기관/문서번호 모바일에서 1열 세로 배치',
+      '시스템 alert/confirm 전면 제거: 접수·배정·검색·대장·사용자관리 모두 커스텀 모달로 교체',
+      '모달 타입 구분: 성공(초록)/오류(빨강)/안내(파랑) 아이콘·색상 자동 분기',
+    ]
+  },
   {
     version: '1.7.0',
     date: '2026.05.06',
