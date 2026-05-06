@@ -1,7 +1,19 @@
-export const APP_VERSION = '1.4.0'
+export const APP_VERSION = '1.5.0'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.5.0',
+    date: '2026.05.06',
+    changes: [
+      '인쇄 기본 방향 세로(A4) 변경, 가로 선택 시 자동 레이아웃 전환',
+      '세로 출력 기준 30건 1페이지 수용 (폰트 5.5px, 패딩 최소화)',
+      '가로 출력 시 폰트 8px·패딩 확대 (더 여유 있는 레이아웃)',
+      '검토현황·상태 배지 텍스트 크기를 테이블 폰트에 비례 적용',
+      '인쇄 시 컨테이너 여백(pb-20) 제거로 2페이지 낭비 수정',
+      '인쇄 헤더 제목 크기 22px 유지, 부제목 최소화',
+    ]
+  },
   {
     version: '1.4.0',
     date: '2026.05.06',

@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 md:p-8 pb-20 max-w-7xl mx-auto">
+  <div class="p-4 md:p-8 pb-20 max-w-7xl mx-auto print:p-0 print:pb-0 print:max-w-none">
     <header class="mb-8 print:hidden">
       <h1 class="text-2xl font-bold text-gray-900">📋 문서접수대장</h1>
       <p class="text-sm text-gray-500 mt-1">기간, 제목, 검토 단계 등으로 조회하고 대장을 출력할 수 있습니다.</p>
@@ -70,9 +70,9 @@
     <div v-if="hasSearched" class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 print:shadow-none print:border-0 print:rounded-none">
 
       <!-- 인쇄 헤더 (화면에서는 숨김) -->
-      <div class="hidden print:block text-center print:mb-3">
-        <h2 class="text-[22px] font-bold tracking-widest">문 서 접 수 대 장</h2>
-        <p class="text-[9px] text-gray-500 mt-1">{{ printDateRange }} · {{ settingsStore.orgName || '공문서 관리 시스템' }} · 출력일: {{ today }}</p>
+      <div class="hidden print:block text-center print:mb-1">
+        <h2 class="text-[22px] font-bold tracking-widest print:text-[22px] print:tracking-[0.25em]">문 서 접 수 대 장</h2>
+        <p class="text-[9px] text-gray-500 print:text-[5.5px] print:mt-0">{{ printDateRange }} · {{ settingsStore.orgName || '공문서 관리 시스템' }} · 출력일: {{ today }}</p>
       </div>
 
       <!-- 결과 상단 바 (인쇄 시 숨김) -->
@@ -215,7 +215,7 @@
       </template>
 
       <!-- 인쇄 푸터 (화면에서는 숨김) -->
-      <div class="hidden print:block text-right print:mt-1 print:text-[8px] text-gray-500">
+      <div class="hidden print:block text-right print:mt-0.5 print:text-[6px] text-gray-500">
         총 {{ results.length }}건 · {{ settingsStore.orgName || '' }} 문서접수대장
       </div>
     </div>
@@ -374,34 +374,41 @@ onMounted(() => {
     height: auto !important;
     overflow: visible !important;
     width: 100% !important;
+    padding: 0 !important;
   }
 
-  /* 컨테이너 여백 제거 */
+  /* 컨테이너 여백·너비 제거 */
   :deep(.overflow-x-auto) { overflow: visible !important; }
+  :deep(.max-w-7xl) { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+  :deep(.pb-20) { padding-bottom: 0 !important; }
 
-  /* 테이블 기본 */
+  /* 테이블 기본 (세로 A4 기준) */
   table {
     border-collapse: collapse;
     width: 100%;
-    font-size: 8px;
-    table-layout: fixed; /* th의 print:w-[X%] 클래스가 너비를 강제 적용 */
+    font-size: 5.5px;
+    table-layout: fixed;
   }
 
   th, td {
     border: 1px solid #aaa !important;
-    padding: 3px 4px !important;
+    padding: 1px 2px !important;
     vertical-align: middle;
     text-align: center;
     overflow: hidden;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.25;
   }
 
-  /* 긴 텍스트 셀은 줄바꿈 허용 */
-  td:nth-child(2),   /* 접수번호+접수일 */
-  td:nth-child(4),   /* 발신기관+발신문서번호 */
-  td:nth-child(5) {  /* 문서 제목 */
-    white-space: normal;
+  /* 한글 셀: 단어 단위 줄바꿈 */
+  td:nth-child(4),
+  td:nth-child(5) {
     word-break: keep-all;
   }
+
+  /* 접수번호: 영숫자 줄바꿈 허용 */
+  td:nth-child(2) { word-break: break-all; }
 
   /* 문서 제목은 좌측 정렬 */
   td:nth-child(5) { text-align: left; }
@@ -409,17 +416,30 @@ onMounted(() => {
   th {
     background: #f3f4f6 !important;
     font-weight: 700;
-    white-space: normal;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  /* 검토현황·상태 배지 크기를 테이블 기본 폰트에 맞춤 */
+  td span { font-size: inherit !important; line-height: inherit !important; padding: 0 1px !important; }
 
   thead { display: table-header-group; }
   tr { page-break-inside: avoid; }
 }
 
+/* 세로 A4 기본 */
 @page {
-  size: A4 landscape;
-  margin: 8mm 6mm;
+  size: A4;
+  margin: 6mm 5mm;
+}
+
+/* 가로 출력 선택 시 */
+@media print and (orientation: landscape) {
+  table { font-size: 8px !important; }
+  th, td {
+    padding: 3px 4px !important;
+    line-height: 1.3 !important;
+  }
+  td span { font-size: inherit !important; padding: 0 2px !important; }
 }
 </style>
