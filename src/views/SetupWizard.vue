@@ -155,18 +155,24 @@ VITE_FIREBASE_APP_ID=1:123:web:abcdef</pre>
             </div>
 
             <!-- STEP 5: 빌드 + 배포 -->
-            <div class="px-6 py-4 space-y-2">
+            <div class="px-6 py-4 space-y-3">
               <p class="font-bold text-sm text-gray-800">STEP 5. 빌드 및 Firebase 배포</p>
               <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-3 text-[11px] font-mono leading-relaxed">npm run build
 
 firebase init hosting
-  → 프로젝트 선택: 방금 만든 프로젝트 선택
-  → public directory: dist
-  → single-page app: Yes
-  → GitHub auto-deploy: No
+  → Use an existing project 선택
+  → 목록에서 방금 만든 자신의 프로젝트 선택  ← 반드시 본인 프로젝트!
+  → What do you want to use as your public directory? dist
+  → Configure as a single-page app? Yes
+  → Set up automatic builds with GitHub? No
+  → File dist/index.html already exists. Overwrite? No
 
 firebase deploy --only hosting,firestore:rules</pre>
-              <p class="text-gray-600">배포 완료 후 출력되는 <strong>Hosting URL</strong>(xxx.web.app)로 접속하면 이 초기설정 페이지가 나타납니다.</p>
+              <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-2 text-amber-800 text-[11px] space-y-1">
+                <p>⚠️ <code class="bg-amber-100 px-1 rounded">Failed to get Firebase project ...</code> 오류가 나면 → <strong>다른 사람의 프로젝트가 선택된 것</strong>입니다.<br>
+                <code class="bg-amber-100 px-1 rounded">firebase init hosting</code>을 다시 실행해서 <strong>본인 프로젝트로 재선택</strong>하세요.</p>
+              </div>
+              <p class="text-gray-600 text-xs">배포 완료 후 터미널에 출력되는 <strong>Hosting URL</strong>(https://your-project-id.web.app)로 접속하면 초기설정 페이지가 나타납니다.</p>
             </div>
 
             <!-- 오류 안내 -->
@@ -179,6 +185,7 @@ firebase deploy --only hosting,firestore:rules</pre>
                   <ul class="space-y-1 text-gray-500">
                     <li>· <code class="bg-gray-100 px-0.5 rounded">npm: command not found</code> → Node.js 재설치</li>
                     <li>· <code class="bg-gray-100 px-0.5 rounded">EACCES permission denied</code> → 관리자 권한 터미널</li>
+                    <li>· <code class="bg-gray-100 px-0.5 rounded">Failed to get Firebase project</code> → firebase init hosting 재실행 후 본인 프로젝트 선택</li>
                     <li>· <code class="bg-gray-100 px-0.5 rounded">Firebase: Error (auth/...)</code> → Authentication 활성화 확인</li>
                     <li>· <code class="bg-gray-100 px-0.5 rounded">Missing or insufficient permissions</code> → Firestore 규칙 배포 확인</li>
                     <li>· 빌드 후 흰 화면 → .env 파일 내용 재확인</li>

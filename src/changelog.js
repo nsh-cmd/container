@@ -1,7 +1,17 @@
-export const APP_VERSION = '1.9.2'
+export const APP_VERSION = '1.9.3'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.9.3',
+    date: '2026.05.06',
+    changes: [
+      '.firebaserc를 .gitignore에 추가 — 클론 시 타인 프로젝트 ID 충돌 오류 근본 해결',
+      'STEP 5 메뉴얼: firebase init 질문 항목 전체 안내 및 본인 프로젝트 선택 강조',
+      'STEP 5 경고박스: Failed to get Firebase project 오류 원인·해결방법 안내 추가',
+      '오류 체크리스트: Failed to get Firebase project 항목 추가',
+    ]
+  },
   {
     version: '1.9.2',
     date: '2026.05.06',

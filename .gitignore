@@ -3,6 +3,9 @@
 .env.local
 .env.*.local
 
+# Firebase project config (각자 자신의 프로젝트로 firebase init 실행)
+.firebaserc
+
 # Logs
 logs
 *.log
