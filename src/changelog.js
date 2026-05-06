@@ -1,7 +1,20 @@
-export const APP_VERSION = '1.8.0'
+export const APP_VERSION = '1.9.0'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.9.0',
+    date: '2026.05.06',
+    changes: [
+      '제3자 배포 지원: 각 기관이 자신의 Firebase 프로젝트에 연결하는 독립 배포 구조',
+      'Firebase 설정 UI 입력: .env 파일 편집 없이 앱 초기설정 페이지에서 직접 입력·저장',
+      'localStorage 기반 설정 저장: 브라우저에 안전하게 보관, 파일 수정 불필요',
+      '초기설정 페이지 배포 가이드 추가: Node.js 설치·터미널·Firebase CLI·빌드 배포 전 과정 안내',
+      '관리자 계정 초기설정: SetupWizard에서 첫 관리자 계정(Auth+Firestore) 직접 생성',
+      'Firestore 부트스트랩 규칙: settings/orgInfo 미존재 시 초기 쓰기 허용 (이후 관리자만 허용)',
+      '설정 페이지 배포 가이드 링크: 초기설정 페이지로 이동하는 배너로 대체',
+    ]
+  },
   {
     version: '1.8.0',
     date: '2026.05.06',

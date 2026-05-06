@@ -174,70 +174,104 @@ firebase deploy --only hosting,firestore:rules</pre>
           </div>
         </section>
 
-        <!-- 0. Firebase 연결 확인 -->
+        <!-- 0. Firebase 연결 설정 -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
-            <h2 class="font-bold text-gray-800">🔥 Firebase 연결 설정</h2>
-            <button @click="toggleGuide('firebase')" class="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 transition">
-              📖 <span>{{ guideOpen.firebase ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
+            <div>
+              <h2 class="font-bold text-gray-800">🔥 Firebase 연결 설정</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Firebase Console에서 복사한 설정값을 아래에 입력하세요.</p>
+            </div>
+            <button @click="toggleGuide('firebase')" class="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 transition whitespace-nowrap">
+              📖 <span>{{ guideOpen.firebase ? '안내 닫기' : '값 찾는 방법' }}</span>
             </button>
           </div>
+
+          <!-- 값 찾는 방법 안내 -->
           <div v-if="guideOpen.firebase" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
-            <p class="font-semibold">📋 Firebase 설정 안내</p>
-            <ol class="list-decimal list-inside space-y-1 text-blue-700">
-              <li><a href="https://console.firebase.google.com" target="_blank" class="underline font-semibold">Firebase Console</a>에 접속 → 프로젝트 선택 또는 새 프로젝트 생성</li>
-              <li>좌측 메뉴 <strong>프로젝트 설정</strong>(⚙️) → <strong>일반</strong> 탭 → 하단 <strong>내 앱</strong> 영역</li>
-              <li>웹 앱이 없으면 <strong>&lt;/&gt;</strong> 아이콘으로 웹 앱 추가</li>
-              <li><strong>firebaseConfig</strong> 객체의 각 값을 프로젝트 루트의 <code class="bg-blue-100 px-1 rounded">.env.local</code> 파일에 입력</li>
-              <li>좌측 <strong>빌드 → Authentication</strong>에서 <strong>이메일/비밀번호</strong> 로그인 활성화</li>
-              <li>좌측 <strong>빌드 → Firestore Database</strong>에서 데이터베이스 생성</li>
+            <p class="font-semibold">📋 Firebase 설정값 찾는 방법</p>
+            <ol class="list-decimal list-inside space-y-1.5 text-blue-700">
+              <li><a href="https://console.firebase.google.com" target="_blank" class="underline font-semibold">console.firebase.google.com</a> 접속 → 해당 프로젝트 클릭</li>
+              <li>좌측 상단 <strong>⚙️ 프로젝트 설정</strong> 클릭</li>
+              <li><strong>일반</strong> 탭 → 아래로 스크롤 → <strong>내 앱</strong> 영역</li>
+              <li>웹 앱이 없으면 <strong>&lt;/&gt;</strong> 아이콘 클릭 → 앱 이름 입력 → 앱 등록</li>
+              <li>아래 <code class="bg-blue-100 px-1 rounded">firebaseConfig</code> 코드 블록에서 각 항목의 값을 복사하여 아래 입력란에 붙여넣기</li>
             </ol>
-            <div class="bg-amber-50 text-amber-800 px-3 py-2 rounded-lg mt-2 space-y-1">
-              <p class="font-semibold">📄 .env.local 파일 형식:</p>
-              <pre class="bg-amber-100/50 px-3 py-2 rounded text-[11px] font-mono leading-relaxed overflow-x-auto">VITE_FIREBASE_API_KEY=AIzaSy...
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project
-VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abcdef</pre>
-              <p>⚠️ <code class="bg-amber-100 px-1 rounded">.env.local</code> 수정 후에는 <strong>서버를 재시작</strong>해야 반영됩니다.</p>
+            <div class="bg-white border border-blue-100 rounded-lg px-4 py-3 font-mono text-[11px] text-gray-700 leading-relaxed">
+              <span class="text-gray-400">const firebaseConfig = &#123;</span><br>
+              &nbsp;&nbsp;<span class="text-blue-600">apiKey</span>: <span class="text-green-600">"AIzaSy..."</span>,<br>
+              &nbsp;&nbsp;<span class="text-blue-600">authDomain</span>: <span class="text-green-600">"your-project.firebaseapp.com"</span>,<br>
+              &nbsp;&nbsp;<span class="text-blue-600">projectId</span>: <span class="text-green-600">"your-project-id"</span>,<br>
+              &nbsp;&nbsp;<span class="text-blue-600">storageBucket</span>: <span class="text-green-600">"your-project.appspot.com"</span>,<br>
+              &nbsp;&nbsp;<span class="text-blue-600">messagingSenderId</span>: <span class="text-green-600">"123456789"</span>,<br>
+              &nbsp;&nbsp;<span class="text-blue-600">appId</span>: <span class="text-green-600">"1:123:web:abc"</span><br>
+              <span class="text-gray-400">&#125;</span>
+            </div>
+            <div class="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-amber-700">
+              또한 <strong>빌드 → Authentication → 이메일/비밀번호 활성화</strong>와 <strong>Firestore Database 생성</strong>이 완료되어 있어야 합니다.
             </div>
           </div>
+
+          <!-- 입력 폼 -->
           <div class="p-6 space-y-4">
-            <!-- 현재 연결된 Firebase 프로젝트 정보 -->
-            <div class="space-y-3">
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">Project ID</span>
-                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.projectId || '미설정' }}</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">Auth Domain</span>
-                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.authDomain || '미설정' }}</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">API Key</span>
-                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.apiKeyMasked || '미설정' }}</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-xs font-semibold text-gray-500 w-36 shrink-0">Storage Bucket</span>
-                <span class="text-sm font-mono text-gray-800 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 flex-1 truncate">{{ firebaseInfo.storageBucket || '미설정' }}</span>
-              </div>
+            <!-- 연결 상태 배너 -->
+            <div class="flex items-center gap-3 px-4 py-3 rounded-xl border"
+                 :class="firebaseInfo.projectId ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="firebaseInfo.projectId ? 'bg-emerald-500' : 'bg-amber-400'"></span>
+              <span class="text-xs font-semibold" :class="firebaseInfo.projectId ? 'text-emerald-700' : 'text-amber-700'">
+                {{ firebaseInfo.projectId ? `연결됨: ${firebaseInfo.projectId}` : '미설정 — 아래에 Firebase 설정값을 입력하세요' }}
+              </span>
+              <button v-if="firebaseInfo.projectId" @click="showFirebaseForm = !showFirebaseForm"
+                      class="ml-auto text-xs text-gray-500 hover:text-gray-700 underline underline-offset-2">
+                {{ showFirebaseForm ? '접기' : '수정' }}
+              </button>
             </div>
 
-            <!-- 연결 상태 -->
-            <div class="flex items-center gap-3 pt-2">
-              <button @click="testFirebase" :disabled="testingFirebase" class="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 transition whitespace-nowrap">
-                {{ testingFirebase ? '연결 확인 중...' : '🔌 연결 테스트' }}
+            <!-- 설정값 입력 폼 -->
+            <div v-if="!firebaseInfo.projectId || showFirebaseForm" class="space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-gray-600 block mb-1">API Key <span class="text-red-500">*</span></label>
+                  <input v-model="fbConfig.apiKey" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 transition" placeholder="AIzaSy...">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-600 block mb-1">Auth Domain <span class="text-red-500">*</span></label>
+                  <input v-model="fbConfig.authDomain" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 transition" placeholder="your-project.firebaseapp.com">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-600 block mb-1">Project ID <span class="text-red-500">*</span></label>
+                  <input v-model="fbConfig.projectId" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 transition" placeholder="your-project-id">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-600 block mb-1">Storage Bucket <span class="text-red-500">*</span></label>
+                  <input v-model="fbConfig.storageBucket" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 transition" placeholder="your-project.appspot.com">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-600 block mb-1">Messaging Sender ID <span class="text-red-500">*</span></label>
+                  <input v-model="fbConfig.messagingSenderId" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 transition" placeholder="123456789">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-600 block mb-1">App ID <span class="text-red-500">*</span></label>
+                  <input v-model="fbConfig.appId" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 transition" placeholder="1:123:web:abcdef">
+                </div>
+              </div>
+              <button @click="saveFirebaseConfig"
+                      :disabled="!fbConfig.apiKey || !fbConfig.projectId || !fbConfig.authDomain"
+                      class="w-full bg-orange-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-orange-600 disabled:opacity-40 transition shadow-sm shadow-orange-400/20">
+                🔌 저장 후 연결 확인 (페이지 새로고침)
+              </button>
+              <p class="text-[11px] text-gray-400 text-center">입력값은 이 브라우저에 안전하게 저장되며, 파일 수정은 필요 없습니다.</p>
+            </div>
+
+            <!-- 연결 테스트 (설정 완료 후) -->
+            <div v-if="firebaseInfo.projectId && !showFirebaseForm" class="flex items-center gap-3">
+              <button @click="testFirebase" :disabled="testingFirebase"
+                      class="bg-orange-500 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 transition whitespace-nowrap">
+                {{ testingFirebase ? '확인 중...' : '🔌 연결 테스트' }}
               </button>
               <div v-if="firebaseTestResult" class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full" :class="firebaseTestResult.ok ? 'bg-green-500' : 'bg-red-500'"></span>
                 <span class="text-xs font-semibold" :class="firebaseTestResult.ok ? 'text-green-600' : 'text-red-500'">{{ firebaseTestResult.message }}</span>
               </div>
-            </div>
-
-            <!-- 미설정 경고 -->
-            <div v-if="!firebaseInfo.projectId" class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs text-red-700">
-              ⚠️ Firebase 설정이 감지되지 않았습니다. 프로젝트 루트에 <strong>.env.local</strong> 파일을 생성하고 Firebase 설정값을 입력한 후 서버를 재시작해 주세요.
             </div>
           </div>
         </section>
@@ -511,15 +545,38 @@ const slackTestResult = ref(null)
 const testingFirebase = ref(false)
 const firebaseTestResult = ref(null)
 
-// 현재 .env.local에서 로드된 Firebase 설정 정보
+// localStorage 또는 env에서 저장된 Firebase 설정 읽기
+const _storedFb = (() => {
+  try { return JSON.parse(localStorage.getItem('firebase_config') || 'null') } catch { return null }
+})()
+
+// Firebase 연결 상태 표시용 (읽기 전용 요약)
 const firebaseInfo = reactive({
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  apiKeyMasked: import.meta.env.VITE_FIREBASE_API_KEY
-    ? import.meta.env.VITE_FIREBASE_API_KEY.slice(0, 10) + '••••••••••'
-    : ''
+  projectId:     _storedFb?.projectId     || import.meta.env.VITE_FIREBASE_PROJECT_ID     || '',
+  authDomain:    _storedFb?.authDomain    || import.meta.env.VITE_FIREBASE_AUTH_DOMAIN    || '',
+  storageBucket: _storedFb?.storageBucket || import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  apiKeyMasked: (_storedFb?.apiKey || import.meta.env.VITE_FIREBASE_API_KEY || '').slice(0, 10) + '••••••••••'
 })
+
+// Firebase 설정 입력 폼
+const showFirebaseForm = ref(false)
+const fbConfig = reactive({
+  apiKey:            _storedFb?.apiKey            || import.meta.env.VITE_FIREBASE_API_KEY            || '',
+  authDomain:        _storedFb?.authDomain        || import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        || '',
+  projectId:         _storedFb?.projectId         || import.meta.env.VITE_FIREBASE_PROJECT_ID         || '',
+  storageBucket:     _storedFb?.storageBucket     || import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     || '',
+  messagingSenderId: _storedFb?.messagingSenderId || import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId:             _storedFb?.appId             || import.meta.env.VITE_FIREBASE_APP_ID             || ''
+})
+
+const saveFirebaseConfig = () => {
+  if (!fbConfig.apiKey || !fbConfig.authDomain || !fbConfig.projectId) {
+    showAlert('입력 오류', 'API Key, Auth Domain, Project ID는 필수입니다.', 'error')
+    return
+  }
+  localStorage.setItem('firebase_config', JSON.stringify({ ...fbConfig }))
+  window.location.reload()
+}
 
 const guideOpen = reactive({
   deploy: false,
