@@ -14,7 +14,7 @@ import PatchNotes from '../views/PatchNotes.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: Login },
-  { path: '/setup', name: 'Setup', component: SetupWizard, meta: { requiresAuth: true, adminOnly: true } },
+  { path: '/setup', name: 'Setup', component: SetupWizard },
   {
     path: '/',
     component: MainLayout,

@@ -80,7 +80,40 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abcdef</pre>
           </div>
         </section>
 
-        <!-- 1. 시설 기본 정보 -->
+        <!-- 1. 관리자 계정 생성 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
+            <h2 class="font-bold text-gray-800">👤 관리자 계정 생성</h2>
+            <p class="text-xs text-gray-500 mt-0.5">시스템에 로그인할 최고관리자 계정을 만듭니다.</p>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-semibold text-gray-600 block mb-1">이름 <span class="text-red-500">*</span></label>
+                <input v-model="form.adminName" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: 홍길동">
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-600 block mb-1">이메일 <span class="text-red-500">*</span></label>
+                <input v-model="form.adminEmail" type="email" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="admin@example.com">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-semibold text-gray-600 block mb-1">비밀번호 <span class="text-red-500">*</span></label>
+                <input v-model="form.adminPassword" type="password" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="6자 이상">
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-600 block mb-1">비밀번호 확인 <span class="text-red-500">*</span></label>
+                <input v-model="form.adminPasswordConfirm" type="password" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="동일하게 입력">
+              </div>
+            </div>
+            <div class="bg-blue-50 rounded-xl px-4 py-3 text-xs text-blue-700">
+              💡 이 계정은 시스템 전체를 관리하는 최고관리자입니다. 초기설정 완료 후 이 계정으로 로그인하세요.
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. 시설 기본 정보 -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
             <h2 class="font-bold text-gray-800">🏢 시설 기본 정보</h2>
@@ -273,13 +306,36 @@ VITE_FIREBASE_APP_ID=1:123456789:web:abcdef</pre>
         </div>
       </div>
     </div>
+
+    <!-- 커스텀 다이얼로그 -->
+    <div v-if="dialog.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                 :class="dialog.type === 'error' ? 'bg-red-100 text-red-600' : (dialog.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600')">
+              <svg v-if="dialog.type === 'error'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <svg v-else-if="dialog.type === 'success'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <svg v-else class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">{{ dialog.title }}</h3>
+          </div>
+          <p class="text-sm text-slate-600 mb-6 leading-relaxed whitespace-pre-line">{{ dialog.message }}</p>
+          <div class="flex justify-end">
+            <button @click="dialog.onConfirm" class="px-4 py-2 text-white text-sm font-semibold rounded-xl transition shadow-sm"
+                    :class="dialog.type === 'error' ? 'bg-red-600 hover:bg-red-700' : (dialog.type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700')">확인</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { db } from '../firebase/config'
+import { auth, db } from '../firebase/config'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { useSettingsStore } from '../store/settings'
 
@@ -311,11 +367,24 @@ const guideOpen = reactive({
 })
 
 const form = reactive({
+  adminName: '',
+  adminEmail: '',
+  adminPassword: '',
+  adminPasswordConfirm: '',
   orgName: '',
   facilityType: '',
   slackWebhookUrl: '',
   appsScriptUrl: '',
   driveFolderId: ''
+})
+
+// ── 커스텀 다이얼로그 ──
+const dialog = ref({ show: false, title: '', message: '', type: 'info', isConfirm: false, onConfirm: () => {}, onCancel: () => {} })
+const showAlert = (title, message, type = 'info') => new Promise((resolve) => {
+  dialog.value = { show: true, title, message, type, isConfirm: false,
+    onConfirm: () => { dialog.value.show = false; resolve() },
+    onCancel: () => { dialog.value.show = false; resolve() }
+  }
 })
 
 // Apps Script 코드 (PropertiesService 기반 — 하드코딩 없음)
@@ -501,14 +570,40 @@ const testSlack = async () => {
 }
 
 const completeSetup = async () => {
+  if (!form.adminName.trim() || !form.adminEmail.trim() || !form.adminPassword) {
+    await showAlert('입력 오류', '관리자 이름, 이메일, 비밀번호는 필수입니다.', 'error')
+    return
+  }
+  if (form.adminPassword.length < 6) {
+    await showAlert('입력 오류', '비밀번호는 6자 이상이어야 합니다.', 'error')
+    return
+  }
+  if (form.adminPassword !== form.adminPasswordConfirm) {
+    await showAlert('입력 오류', '비밀번호가 일치하지 않습니다.', 'error')
+    return
+  }
   if (!form.orgName.trim()) {
-    alert('시설명은 필수 입력 항목입니다.')
+    await showAlert('입력 오류', '시설명은 필수 입력 항목입니다.', 'error')
     return
   }
 
   saving.value = true
   try {
-    // 1. 기관 정보 저장
+    // 1. Firebase Auth 관리자 계정 생성
+    const credential = await createUserWithEmailAndPassword(auth, form.adminEmail.trim(), form.adminPassword)
+    const uid = credential.user.uid
+
+    // 2. Firestore 관리자 프로필 생성
+    await setDoc(doc(db, 'users', uid), {
+      email: form.adminEmail.trim(),
+      name: form.adminName.trim(),
+      role: 'admin',
+      active: true,
+      department: '관리자',
+      createdAt: new Date()
+    })
+
+    // 3. 기관 정보 저장 (isInitialized: true → 이후 부트스트랩 모드 종료)
     await setDoc(doc(db, 'settings', 'orgInfo'), {
       name: form.orgName.trim(),
       facilityType: form.facilityType,
@@ -519,15 +614,19 @@ const completeSetup = async () => {
       initializedAt: new Date()
     })
 
-
     // 4. 스토어 갱신
     await settingsStore.loadSettings()
 
-    alert('✅ 초기설정이 완료되었습니다!\n이제 시스템을 사용할 수 있습니다.')
+    await showAlert('설정 완료', `초기설정이 완료되었습니다!\n\n관리자 계정: ${form.adminEmail.trim()}\n\n이제 시스템을 사용할 수 있습니다.`, 'success')
     router.push('/')
   } catch (e) {
     console.error(e)
-    alert('설정 저장 중 오류가 발생했습니다.')
+    const msg = e.code === 'auth/email-already-in-use'
+      ? '이미 사용 중인 이메일입니다.'
+      : e.code === 'auth/weak-password'
+      ? '비밀번호가 너무 약합니다. 6자 이상으로 입력하세요.'
+      : `설정 저장 중 오류가 발생했습니다.\n${e.message}`
+    await showAlert('오류', msg, 'error')
   } finally {
     saving.value = false
   }
