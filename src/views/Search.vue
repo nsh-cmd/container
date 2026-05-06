@@ -138,7 +138,7 @@
     </div>
 
     <!-- 문서 상세 모달 -->
-    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" @updated="doSearch" />
+    <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" @updated="doSearch" @deleted="showModal = false; doSearch()" />
   </div>
 </template>
 
