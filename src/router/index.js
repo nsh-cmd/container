@@ -10,13 +10,14 @@ import MyDocs from '../views/docs/MyDocs.vue'
 import Register from '../views/docs/Register.vue'
 import Search from '../views/Search.vue'
 import SetupWizard from '../views/SetupWizard.vue'
+import PatchNotes from '../views/PatchNotes.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/setup', name: 'Setup', component: SetupWizard, meta: { requiresAuth: true, adminOnly: true } },
-  { 
-    path: '/', 
-    component: MainLayout, 
+  {
+    path: '/',
+    component: MainLayout,
     meta: { requiresAuth: true },
     children: [
       { path: '', name: 'Dashboard', component: Dashboard },
@@ -26,7 +27,8 @@ const routes = [
       { path: 'assign', name: 'Assign', component: Assign },
       { path: 'mydocs', name: 'MyDocs', component: MyDocs },
       { path: 'register', name: 'Register', component: Register },
-      { path: 'search', name: 'Search', component: Search }
+      { path: 'search', name: 'Search', component: Search },
+      { path: 'patches', name: 'PatchNotes', component: PatchNotes }
     ]
   },
   { path: '/:catchAll(.*)', redirect: '/' }

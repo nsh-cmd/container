@@ -52,6 +52,7 @@ import { db } from '../../firebase/config'
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore'
 import DocDetailModal from '../../components/DocDetailModal.vue'
 import { useSettingsStore } from '../../store/settings'
+import { applyAutoSkip, extractReviewerEmails } from '../../utils/docUtils'
 
 const loading = ref(true)
 const docs = ref([])
@@ -59,7 +60,6 @@ const users = ref([])
 
 const settingsStore = useSettingsStore()
 
-// 모달 관련 상태
 const showModal = ref(false)
 const selectedDoc = ref({})
 
@@ -71,11 +71,9 @@ const openDocDetail = (doc) => {
 const loadData = async () => {
   loading.value = true
   try {
-    // 담당자(user) 목록 호출
     const userSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer']), where('active', '==', true)))
     users.value = userSnap.docs.map(d => d.data())
 
-    // 접수대기 문서 세팅
     const q = query(collection(db, 'documents'), where('status', '==', '접수대기'))
     const snap = await getDocs(q)
     docs.value = snap.docs.map(d => {
@@ -83,11 +81,9 @@ const loadData = async () => {
       data.receiptDate = data.receiptDate?.toDate?.() || data.receiptDate
       return { id: d.id, ...data, selectedAssignee: '' }
     })
-    
-    // Sort client-side since compound queries need index
-    docs.value.sort((a,b) => b.receiptDate - a.receiptDate)
-  } catch(e) {
-    console.error(e)
+    docs.value.sort((a, b) => b.receiptDate - a.receiptDate)
+  } catch (e) {
+    console.error('배정 목록 로드 실패:', e)
   } finally {
     loading.value = false
   }
@@ -99,65 +95,25 @@ const assignDoc = async (docItem) => {
 
   try {
     const docRef = doc(db, 'documents', docItem.id)
-    
-    // 검토자 직전 단계 자동 생략 로직
-    let updatedReviewSteps = docItem.reviewSteps ? JSON.parse(JSON.stringify(docItem.reviewSteps)) : []
-    
-    console.log('=== [배정 자동생략 디버그] ===')
-    console.log('selectedAssignee:', JSON.stringify(docItem.selectedAssignee))
-    console.log('reviewSteps 수:', updatedReviewSteps.length)
-    updatedReviewSteps.forEach((s, i) => {
-      console.log(`  step[${i}] email="${s.email}" name="${s.name}" level=${s.level}`)
-    })
-    
-    if (updatedReviewSteps.length > 0) {
-      const assigneeEmail = (docItem.selectedAssignee.email || '').trim()
-      const assigneeName = (docItem.selectedAssignee.name || '').trim()
-      
-      console.log('매칭 시도 - assigneeEmail:', JSON.stringify(assigneeEmail), 'assigneeName:', JSON.stringify(assigneeName))
-      
-      let reviewerIndex = -1
-      for (let i = updatedReviewSteps.length - 1; i >= 0; i--) {
-        const stepEmail = (updatedReviewSteps[i].email || '').trim()
-        const stepName = (updatedReviewSteps[i].name || '').trim()
-        const emailMatch = stepEmail === assigneeEmail
-        const nameMatch = stepName === assigneeName
-        console.log(`  비교 step[${i}]: stepEmail="${stepEmail}" vs "${assigneeEmail}" => ${emailMatch}, stepName="${stepName}" vs "${assigneeName}" => ${nameMatch}`)
-        if (emailMatch || nameMatch) {
-          reviewerIndex = i
-          console.log(`  ✅ 매칭 성공! reviewerIndex = ${reviewerIndex}`)
-          break
-        }
-      }
-      
-      console.log('최종 reviewerIndex:', reviewerIndex)
-      
-      if (reviewerIndex > 0) {
-        for (let i = 0; i < reviewerIndex; i++) {
-          updatedReviewSteps[i].isApproved = true
-          updatedReviewSteps[i].approvedAt = new Date()
-          updatedReviewSteps[i].name = (updatedReviewSteps[i].name || '') + ' (자동생략)'
-          console.log(`  ⏭ step[${i}] 자동생략 처리 완료`)
-        }
-      } else {
-        console.log('⚠️ 자동생략 미적용: reviewerIndex <= 0')
-      }
-    }
-    console.log('=== [배정 자동생략 디버그 끝] ===')
+    const updatedReviewSteps = applyAutoSkip(
+      docItem.reviewSteps,
+      docItem.selectedAssignee.email,
+      docItem.selectedAssignee.name
+    )
 
     await updateDoc(docRef, {
       status: '배정완료',
       assigneeEmail: docItem.selectedAssignee.email,
       assigneeName: docItem.selectedAssignee.name,
       assignedAt: new Date(),
-      reviewSteps: updatedReviewSteps
+      reviewSteps: updatedReviewSteps,
+      reviewerEmails: extractReviewerEmails(updatedReviewSteps)
     })
-    
-    // 로컬 목록에서 제거
+
     docs.value = docs.value.filter(d => d.id !== docItem.id)
     alert('배정이 완료되었습니다.')
 
-    // 슬랙 알림 전송
+    // 슬랙 알림
     if (settingsStore.slackWebhookUrl) {
       try {
         let text = settingsStore.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {assigneeName}'
@@ -165,24 +121,15 @@ const assignDoc = async (docItem) => {
         text = text.replace(/{receiptNo}/g, docItem.receiptNo || '')
         text = text.replace(/{assigneeName}/g, docItem.selectedAssignee.name || '')
         text = text.replace(/{senderOrg}/g, docItem.senderOrg || '')
-        
         const attachmentText = (docItem.attachments && docItem.attachments.length > 0)
           ? docItem.attachments.map(f => f.name).join(', ')
           : '첨부파일 없음'
         text = text.replace(/{attachments}/g, attachmentText)
-
-        await fetch(settingsStore.slackWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
-          mode: 'no-cors'
-        })
-      } catch(e) {
-        console.error('Slack 알림 전송 실패', e)
-      }
+        await fetch(settingsStore.slackWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), mode: 'no-cors' })
+      } catch (e) { /* Slack 오류는 무시 */ }
     }
-  } catch(e) {
-    console.error(e)
+  } catch (e) {
+    console.error('배정 처리 실패:', e)
     alert('배정 중 오류가 발생했습니다.')
   }
 }

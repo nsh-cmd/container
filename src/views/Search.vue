@@ -1,5 +1,5 @@
 <template>
-  <div class="p-8 pb-20 max-w-6xl mx-auto">
+  <div class="p-4 md:p-8 pb-20 max-w-6xl mx-auto">
     <header class="mb-8">
       <h1 class="text-2xl font-bold text-gray-900">문서 검색</h1>
       <p class="text-sm text-gray-500 mt-1">키워드, 날짜, 분류 등의 복합 조건을 통해 문서를 조회합니다.</p>
@@ -39,56 +39,89 @@
       <div v-else-if="!hasSearched" class="p-12 text-center text-slate-400 text-[14px]">검색 조건을 입력한 뒤 조회버튼을 눌러주세요.</div>
       <div v-else-if="results.length === 0" class="p-12 text-center text-slate-500 font-bold text-[14px]">일치하는 문서가 없습니다.</div>
       
-      <table v-else class="w-full text-left whitespace-nowrap">
-        <thead>
-          <tr class="text-[12px] text-slate-400 border-b border-slate-100 uppercase tracking-wider bg-slate-50/50">
-            <th class="px-7 py-4 font-semibold min-w-[120px]">접수번호</th>
-            <th class="px-7 py-4 font-semibold">분류</th>
-            <th class="px-7 py-4 font-semibold min-w-[200px] w-full">제목 및 개요</th>
-            <th class="px-7 py-4 font-semibold whitespace-nowrap">담당자</th>
-            <th class="px-7 py-4 font-semibold whitespace-nowrap">검토 상태</th>
-            <th class="px-7 py-4 font-semibold whitespace-nowrap">상태</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50">
-          <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-            <td class="px-7 py-4 text-[13px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</td>
-            <td class="px-7 py-4 text-[13px] text-slate-500">{{ d.categoryName || '-' }}</td>
-            <td class="px-7 py-4 whitespace-normal">
-              <p class="text-[14px] font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ d.title }}</p>
-              <p class="text-[12px] text-slate-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
-            </td>
-            <td class="px-7 py-4">
-              <div class="flex items-center gap-2">
-                <span class="text-[13px] text-slate-700 font-semibold">{{ d.assigneeName || '미배정' }}</span>
-                <span v-if="d.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded-md border font-medium" :class="d.assigneeReadAt ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-200'">
-                  {{ d.assigneeReadAt ? '읽음' : '미확인' }}
-                </span>
-              </div>
-            </td>
-            <td class="px-7 py-4">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-[12px] text-slate-400">-</span>
-                <span v-for="(step, idx) in d.reviewSteps" :key="idx" 
-                      class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
-                      :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')"
-                      :title="stepTitle(step) + '(' + (step.name || '미지정') + ') ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
-                  {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
-                </span>
-              </div>
-            </td>
-            <td class="px-7 py-4">
-              <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg" :class="{
+      <template v-else>
+        <!-- 모바일 카드뷰 -->
+        <div class="md:hidden divide-y divide-slate-50">
+          <div v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="px-5 py-4 active:bg-slate-50 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{{ d.receiptNo }}</span>
+              <span class="px-2 py-0.5 text-[11px] font-bold rounded-md" :class="{
                 'bg-slate-100 text-slate-600': d.status === '접수대기',
                 'bg-amber-100 text-amber-700': d.status === '배정완료',
-                'bg-indigo-100 text-indigo-700': d.status === '처리중',
-                'bg-emerald-100 text-emerald-700': d.status === '완료',
-                'bg-indigo-100 text-indigo-700': d.status === '검토중'
+                'bg-indigo-100 text-indigo-700': d.status === '처리중' || d.status === '검토중',
+                'bg-emerald-100 text-emerald-700': d.status === '완료'
               }">{{ d.status }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+            <p class="text-[14px] font-bold text-slate-800 mb-1 leading-snug">{{ d.title }}</p>
+            <p v-if="d.note" class="text-[12px] text-slate-400 mb-2 line-clamp-1">{{ d.note }}</p>
+            <div class="flex flex-wrap items-center gap-x-2 text-[12px] text-slate-500 mb-2">
+              <span>{{ d.categoryName || '-' }}</span>
+              <span class="text-slate-300">·</span>
+              <span>담당: <span class="font-semibold text-slate-700">{{ d.assigneeName || '미배정' }}</span></span>
+              <span v-if="d.assigneeName" class="text-slate-300">·</span>
+              <span v-if="d.assigneeName" class="text-[11px]" :class="d.assigneeReadAt ? 'text-emerald-500' : 'text-slate-400'">{{ d.assigneeReadAt ? '읽음' : '미확인' }}</span>
+            </div>
+            <div v-if="d.reviewSteps && d.reviewSteps.length > 0" class="flex flex-wrap gap-1.5 mt-1">
+              <span v-for="(step, idx) in d.reviewSteps" :key="idx"
+                    class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
+                    :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')">
+                {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 데스크톱 테이블 -->
+        <table class="hidden md:table w-full text-left whitespace-nowrap">
+          <thead>
+            <tr class="text-[12px] text-slate-400 border-b border-slate-100 uppercase tracking-wider bg-slate-50/50">
+              <th class="px-7 py-4 font-semibold min-w-[120px]">접수번호</th>
+              <th class="px-7 py-4 font-semibold">분류</th>
+              <th class="px-7 py-4 font-semibold min-w-[200px] w-full">제목 및 개요</th>
+              <th class="px-7 py-4 font-semibold whitespace-nowrap">담당자</th>
+              <th class="px-7 py-4 font-semibold whitespace-nowrap">검토 상태</th>
+              <th class="px-7 py-4 font-semibold whitespace-nowrap">상태</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+              <td class="px-7 py-4 text-[13px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</td>
+              <td class="px-7 py-4 text-[13px] text-slate-500">{{ d.categoryName || '-' }}</td>
+              <td class="px-7 py-4 whitespace-normal">
+                <p class="text-[14px] font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ d.title }}</p>
+                <p class="text-[12px] text-slate-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
+              </td>
+              <td class="px-7 py-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-[13px] text-slate-700 font-semibold">{{ d.assigneeName || '미배정' }}</span>
+                  <span v-if="d.assigneeName" class="text-[10px] px-1.5 py-0.5 rounded-md border font-medium" :class="d.assigneeReadAt ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-200'">
+                    {{ d.assigneeReadAt ? '읽음' : '미확인' }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-7 py-4">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-[12px] text-slate-400">-</span>
+                  <span v-for="(step, idx) in d.reviewSteps" :key="idx"
+                        class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
+                        :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')"
+                        :title="stepTitle(step) + '(' + (step.name || '미지정') + ') ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
+                    {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
+                  </span>
+                </div>
+              </td>
+              <td class="px-7 py-4">
+                <span class="px-2.5 py-1 text-[11px] font-bold rounded-lg" :class="{
+                  'bg-slate-100 text-slate-600': d.status === '접수대기',
+                  'bg-amber-100 text-amber-700': d.status === '배정완료',
+                  'bg-indigo-100 text-indigo-700': d.status === '처리중' || d.status === '검토중',
+                  'bg-emerald-100 text-emerald-700': d.status === '완료'
+                }">{{ d.status }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
     </div>
 
     <!-- 문서 상세 모달 -->

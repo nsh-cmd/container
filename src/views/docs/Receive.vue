@@ -123,6 +123,7 @@ import { db } from '../../firebase/config'
 import { collection, doc, getDoc, setDoc, query, where, getDocs } from 'firebase/firestore'
 import { useAuthStore } from '../../store/auth'
 import { useSettingsStore } from '../../store/settings'
+import { applyAutoSkip, generateReceiptNo, extractReviewerEmails } from '../../utils/docUtils'
 
 const authStore = useAuthStore()
 const settingsStore = useSettingsStore()
@@ -169,7 +170,7 @@ const loadSettings = async () => {
 // --- 파일 처리 ---
 const handleFileSelect = (e) => {
   addFiles(Array.from(e.target.files))
-  e.target.value = '' // 같은 파일 재선택 가능하도록 초기화
+  e.target.value = ''
 }
 
 const handleDrop = (e) => {
@@ -183,7 +184,6 @@ const addFiles = (files) => {
       alert(`"${file.name}" 파일이 10MB를 초과합니다. (${formatFileSize(file.size)})`)
       continue
     }
-    // 중복 파일명 체크
     if (attachedFiles.value.some(f => f.name === file.name && f.size === file.size)) {
       continue
     }
@@ -218,10 +218,7 @@ const formatFileSize = (bytes) => {
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => {
-      const base64 = reader.result.split(',')[1] // data:... 부분 제거
-      resolve(base64)
-    }
+    reader.onload = () => resolve(reader.result.split(',')[1])
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
@@ -230,9 +227,7 @@ const fileToBase64 = (file) => {
 // --- Apps Script로 파일 업로드 ---
 const uploadFilesToDrive = async (receiptNo) => {
   const appsScriptUrl = settingsStore.appsScriptUrl
-  if (!appsScriptUrl || attachedFiles.value.length === 0) {
-    return [] // URL 미설정이거나 파일 없으면 빈 배열
-  }
+  if (!appsScriptUrl || attachedFiles.value.length === 0) return []
 
   const uploadedFiles = []
   const total = attachedFiles.value.length
@@ -240,47 +235,31 @@ const uploadFilesToDrive = async (receiptNo) => {
   for (let i = 0; i < total; i++) {
     const file = attachedFiles.value[i]
     uploadProgress.value = `첨부파일 업로드 중... (${i + 1}/${total}) ${file.name}`
-    uploadPercent.value = Math.round(((i) / total) * 100)
+    uploadPercent.value = Math.round((i / total) * 100)
 
     try {
       const base64 = await fileToBase64(file)
       const res = await fetch(appsScriptUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          action: 'upload',
-          receiptNo,
-          fileName: file.name,
-          fileBase64: base64,
-          mimeType: file.type
-        })
+        body: JSON.stringify({ action: 'upload', receiptNo, fileName: file.name, fileBase64: base64, mimeType: file.type })
       })
-
       const responseData = await res.json()
-      
-      if (!responseData.success) {
-        throw new Error(responseData.message || '서버 오류')
-      }
-
-        uploadedFiles.push({
-          name: responseData.fileName || file.name,
-          size: file.size,
-          mimeType: file.type,
-          uploadedAt: new Date().toISOString(),
-          status: 'uploaded',
-          fileId: responseData.fileId,
-          fileUrl: responseData.fileUrl,
-          folderId: responseData.folderId // 하위 폴더 ID 저장
-        })
-    } catch (err) {
-      console.error(`파일 업로드 실패: ${file.name}`, err)
+      if (!responseData.success) throw new Error(responseData.message || '서버 오류')
       uploadedFiles.push({
-        name: file.name,
+        name: responseData.fileName || file.name,
         size: file.size,
         mimeType: file.type,
         uploadedAt: new Date().toISOString(),
-        status: 'failed',
-        error: err.message
+        status: 'uploaded',
+        fileId: responseData.fileId,
+        fileUrl: responseData.fileUrl,
+        folderId: responseData.folderId
+      })
+    } catch (err) {
+      uploadedFiles.push({
+        name: file.name, size: file.size, mimeType: file.type,
+        uploadedAt: new Date().toISOString(), status: 'failed', error: err.message
       })
     }
   }
@@ -290,90 +269,31 @@ const uploadFilesToDrive = async (receiptNo) => {
   return uploadedFiles
 }
 
-const generateReceiptNo = async () => {
-  const dateStr = form.value.receiptDate.split('T')[0].replace(/-/g, '') // YYYYMMDD
-  
-  const q = query(
-    collection(db, 'documents'),
-    where('receiptNo', '>=', dateStr),
-    where('receiptNo', '<', dateStr + 'z')
-  )
-  const snap = await getDocs(q)
-  const seq = String(snap.size + 1).padStart(3, '0')
-  return `${dateStr}-${seq}`
-}
-
 const submitDoc = async () => {
   loading.value = true
   uploadProgress.value = ''
   uploadPercent.value = 0
   try {
-    const receiptNo = await generateReceiptNo()
+    const receiptNo = await generateReceiptNo(form.value.receiptDate)
 
-    // 1. 첨부파일 업로드 (Apps Script URL이 있으면)
+    // 1. 첨부파일 업로드
     let uploadedFiles = []
     if (attachedFiles.value.length > 0) {
       if (settingsStore.appsScriptUrl) {
         uploadedFiles = await uploadFilesToDrive(receiptNo)
       } else {
-        // Apps Script 미설정 — 파일 메타만 기록
         uploadedFiles = attachedFiles.value.map(f => ({
-          name: f.name,
-          size: f.size,
-          mimeType: f.type,
-          uploadedAt: new Date().toISOString(),
-          status: 'pending' // Drive 미연동
+          name: f.name, size: f.size, mimeType: f.type,
+          uploadedAt: new Date().toISOString(), status: 'pending'
         }))
       }
     }
 
-    // 2. Firestore 문서 저장 및 자동 생략 로직
+    // 2. 자동생략 적용
     const isAssigned = !!form.value.assignee
-    let finalReviewSteps = JSON.parse(JSON.stringify(reviewSteps.value)) // 깊은 복사
-    
-    console.log('=== [자동생략 디버그] ===')
-    console.log('isAssigned:', isAssigned)
-    console.log('assignee 전체 객체:', JSON.stringify(form.value.assignee))
-    console.log('reviewSteps 수:', finalReviewSteps.length)
-    finalReviewSteps.forEach((s, i) => {
-      console.log(`  step[${i}] email="${s.email}" name="${s.name}" level=${s.level}`)
-    })
-    
-    if (isAssigned && finalReviewSteps.length > 0) {
-      const assigneeEmail = (form.value.assignee.email || '').trim()
-      const assigneeName = (form.value.assignee.name || '').trim()
-      
-      console.log('매칭 시도 - assigneeEmail:', JSON.stringify(assigneeEmail), 'assigneeName:', JSON.stringify(assigneeName))
-      
-      let rIdx = -1
-      for (let i = finalReviewSteps.length - 1; i >= 0; i--) {
-        const stepEmail = (finalReviewSteps[i].email || '').trim()
-        const stepName = (finalReviewSteps[i].name || '').trim()
-        const emailMatch = stepEmail === assigneeEmail
-        const nameMatch = stepName === assigneeName
-        console.log(`  비교 step[${i}]: stepEmail="${stepEmail}" vs "${assigneeEmail}" => ${emailMatch}, stepName="${stepName}" vs "${assigneeName}" => ${nameMatch}`)
-        if (emailMatch || nameMatch) {
-          rIdx = i
-          console.log(`  ✅ 매칭 성공! rIdx = ${rIdx}`)
-          break
-        }
-      }
-      
-      console.log('최종 rIdx:', rIdx)
-      
-      if (rIdx > 0) {
-        for (let i = 0; i < rIdx; i++) {
-          finalReviewSteps[i].isApproved = true
-          finalReviewSteps[i].approvedAt = new Date()
-          finalReviewSteps[i].name = (finalReviewSteps[i].name || '') + ' (자동생략)'
-          console.log(`  ⏭ step[${i}] 자동생략 처리 완료`)
-        }
-      } else {
-        console.log('⚠️ 자동생략 미적용: rIdx <= 0')
-      }
-    }
-    console.log('=== [자동생략 디버그 끝] ===')
-    console.log('최종 reviewSteps:', JSON.stringify(finalReviewSteps, null, 2))
+    const finalReviewSteps = isAssigned
+      ? applyAutoSkip(reviewSteps.value, form.value.assignee.email, form.value.assignee.name)
+      : JSON.parse(JSON.stringify(reviewSteps.value))
 
     const docData = {
       receiptNo,
@@ -392,6 +312,7 @@ const submitDoc = async () => {
       assignedAt: isAssigned ? new Date() : null,
       assigneeReadAt: null,
       reviewSteps: finalReviewSteps,
+      reviewerEmails: extractReviewerEmails(finalReviewSteps),
       attachments: uploadedFiles,
       attachmentCount: attachedFiles.value.length,
       driveFileUrl: null,
@@ -402,7 +323,7 @@ const submitDoc = async () => {
 
     await setDoc(doc(db, 'documents', receiptNo), docData)
 
-    // 슬랙 알림 전송 (통합 1회 전송)
+    // 슬랙 알림
     if (settingsStore.slackWebhookUrl) {
       try {
         let text = settingsStore.slackTemplate || '🔔 새로운 문서가 접수되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 발신기관: {senderOrg}\n- 첨부파일: {attachments}'
@@ -410,21 +331,10 @@ const submitDoc = async () => {
         text = text.replace(/{receiptNo}/g, docData.receiptNo || '')
         text = text.replace(/{assigneeName}/g, isAssigned ? docData.assigneeName : '미배정')
         text = text.replace(/{senderOrg}/g, docData.senderOrg || '')
-        
-        const attachmentText = (attachedFiles.value && attachedFiles.value.length > 0)
-          ? attachedFiles.value.map(f => f.name).join(', ')
-          : '첨부파일 없음'
+        const attachmentText = attachedFiles.value.length > 0 ? attachedFiles.value.map(f => f.name).join(', ') : '첨부파일 없음'
         text = text.replace(/{attachments}/g, attachmentText)
-
-        await fetch(settingsStore.slackWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
-          mode: 'no-cors'
-        })
-      } catch (e) {
-        console.error('Slack 알림 전송 실패', e)
-      }
+        await fetch(settingsStore.slackWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), mode: 'no-cors' })
+      } catch (e) { /* Slack 오류는 무시 */ }
     }
 
     const fileMsg = attachedFiles.value.length > 0
@@ -433,8 +343,7 @@ const submitDoc = async () => {
     alert(`정상 접수되었습니다. [${receiptNo}]${fileMsg}`)
     router.push('/assign')
   } catch (err) {
-    console.error(err)
-    alert('접수 중 오류가 발생했습니다.')
+    alert(`접수 중 오류가 발생했습니다.\n${err.message || ''}`)
   } finally {
     loading.value = false
     uploadProgress.value = ''
