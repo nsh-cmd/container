@@ -67,7 +67,7 @@
     </div>
 
     <!-- 결과 영역 -->
-    <div v-if="hasSearched" class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 overflow-hidden print:shadow-none print:border-0 print:rounded-none">
+    <div v-if="hasSearched" class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 print:shadow-none print:border-0 print:rounded-none">
 
       <!-- 인쇄 헤더 (화면에서는 숨김) -->
       <div class="hidden print:block text-center print:mb-3">
@@ -113,6 +113,7 @@
               <span class="text-slate-300">·</span>
               <span>{{ formatDate(d.receiptDate) }}</span>
             </div>
+            <div v-if="d.senderDocNo" class="text-[12px] text-slate-400 mb-1">발신문서번호: <span class="text-slate-600 font-medium">{{ d.senderDocNo }}</span><span v-if="d.senderDocDate"> ({{ formatDateStr(d.senderDocDate) }})</span></div>
             <div class="flex items-center justify-between text-[12px] mb-2">
               <span class="text-slate-500">담당: <span class="font-semibold text-slate-700">{{ d.assigneeName || '미배정' }}</span></span>
               <span class="text-slate-400">📎 {{ d.attachmentCount || 0 }}</span>
@@ -137,14 +138,13 @@
               <tr class="text-[12px] text-slate-400 border-b border-slate-200 uppercase tracking-wider bg-slate-50/50
                          print:text-[8px] print:text-black print:bg-gray-100 print:tracking-normal print:text-center print:uppercase-none">
                 <th class="px-4 py-3 font-semibold text-center w-[50px]  print:w-[3%]">번호</th>
-                <th class="px-4 py-3 font-semibold min-w-[110px]         print:w-[10%]">접수번호</th>
-                <th class="px-4 py-3 font-semibold min-w-[90px]          print:w-[8%]">접수일</th>
+                <th class="px-4 py-3 font-semibold min-w-[110px]         print:w-[11%]">접수번호<br class="hidden print:block"><span class="hidden print:inline text-[7px] font-normal">(접수일)</span></th>
                 <th class="px-4 py-3 font-semibold min-w-[80px]          print:w-[5%]">분류</th>
-                <th class="px-4 py-3 font-semibold min-w-[100px]         print:w-[11%]">발신기관</th>
-                <th class="px-4 py-3 font-semibold min-w-[200px] w-full  print:w-[24%]">문서 제목</th>
+                <th class="px-4 py-3 font-semibold min-w-[140px]         print:w-[14%]">발신기관<br class="hidden print:block"><span class="hidden print:inline text-[7px] font-normal">(발신문서번호/시행일자)</span><span class="md:block hidden text-[10px] font-normal text-slate-400 normal-case tracking-normal">발신문서번호</span></th>
+                <th class="px-4 py-3 font-semibold min-w-[200px] w-full  print:w-[29%]">문서 제목</th>
                 <th class="px-4 py-3 font-semibold min-w-[70px]          print:w-[7%]">담당자</th>
                 <th class="px-4 py-3 font-semibold min-w-[70px]          print:w-[7%]">접수자</th>
-                <th class="px-4 py-3 font-semibold min-w-[240px]         print:w-[18%]">검토 현황 (일자)</th>
+                <th class="px-4 py-3 font-semibold min-w-[240px]         print:w-[17%]">검토 현황 (일자)</th>
                 <th class="px-4 py-3 font-semibold min-w-[70px]          print:w-[7%]">상태</th>
                 <th class="px-4 py-3 font-semibold min-w-[50px] print:hidden">첨부</th>
               </tr>
@@ -153,15 +153,18 @@
               <tr v-for="(d, idx) in results" :key="d.id" class="hover:bg-slate-50/80 transition-colors print:hover:bg-transparent">
                 <!-- 번호 -->
                 <td class="px-4 py-3 text-[13px] text-center text-slate-500">{{ idx + 1 }}</td>
-                <!-- 접수번호 -->
-                <td class="px-4 py-3 text-[13px] font-mono font-bold text-indigo-600 print:text-black print:font-normal">{{ d.receiptNo }}</td>
-                <!-- 접수일 -->
-                <td class="px-4 py-3 text-[13px] text-slate-600">{{ formatDate(d.receiptDate) }}</td>
+                <!-- 접수번호 + 접수일 -->
+                <td class="px-4 py-3 print:text-center">
+                  <div class="text-[10px] font-mono font-bold text-indigo-600 print:text-black print:font-normal">{{ d.receiptNo }}</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5 print:text-[7px] print:text-gray-600">{{ formatDate(d.receiptDate) }}</div>
+                </td>
                 <!-- 분류 -->
                 <td class="px-4 py-3 text-[13px] text-slate-600">{{ d.categoryName || '-' }}</td>
-                <!-- 발신기관: td는 그대로, 안에 div로 line-clamp -->
-                <td class="px-4 py-3 text-[13px] text-slate-600">
-                  <div class="print:line-clamp-2 print:text-center">{{ d.senderOrg || '-' }}</div>
+                <!-- 발신기관 + 발신문서번호 + 시행일자 -->
+                <td class="px-4 py-3 print:text-center">
+                  <div class="text-[13px] text-slate-600 print:line-clamp-2">{{ d.senderOrg || '-' }}</div>
+                  <div v-if="d.senderDocNo" class="text-[10px] font-mono text-slate-500 mt-0.5 print:text-[7px] print:text-black">{{ d.senderDocNo }}</div>
+                  <div v-if="d.senderDocDate" class="text-[10px] text-slate-400 print:text-[7px] print:text-gray-600">{{ formatDateStr(d.senderDocDate) }}</div>
                 </td>
                 <!-- 문서 제목: td는 그대로, 안에 div로 line-clamp -->
                 <td class="px-4 py-3 text-[14px] font-semibold text-slate-800 whitespace-normal print:font-normal">
@@ -341,6 +344,12 @@ const formatDate = (dateObj) => {
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`
 }
 
+const formatDateStr = (str) => {
+  if (!str) return ''
+  const [y, m, d] = str.split('-').map(Number)
+  return `${y}.${m}.${d}`
+}
+
 const formatShortDate = (timestamp) => {
   if (!timestamp) return ''
   const d = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)
@@ -387,14 +396,15 @@ onMounted(() => {
   }
 
   /* 긴 텍스트 셀은 줄바꿈 허용 */
-  td:nth-child(5),   /* 발신기관 */
-  td:nth-child(6) {  /* 문서 제목 */
+  td:nth-child(2),   /* 접수번호+접수일 */
+  td:nth-child(4),   /* 발신기관+발신문서번호 */
+  td:nth-child(5) {  /* 문서 제목 */
     white-space: normal;
     word-break: keep-all;
   }
 
   /* 문서 제목은 좌측 정렬 */
-  td:nth-child(6) { text-align: left; }
+  td:nth-child(5) { text-align: left; }
 
   th {
     background: #f3f4f6 !important;

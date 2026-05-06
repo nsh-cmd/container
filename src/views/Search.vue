@@ -34,7 +34,7 @@
     </div>
 
     <!-- 검색 결과 -->
-    <div class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100 overflow-hidden">
+    <div class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-slate-100">
       <div v-if="loading" class="p-12 text-center text-slate-400 text-[14px]">데이터를 불러오는 중입니다...</div>
       <div v-else-if="!hasSearched" class="p-12 text-center text-slate-400 text-[14px]">검색 조건을 입력한 뒤 조회버튼을 눌러주세요.</div>
       <div v-else-if="results.length === 0" class="p-12 text-center text-slate-500 font-bold text-[14px]">일치하는 문서가 없습니다.</div>
@@ -53,7 +53,9 @@
               }">{{ d.status }}</span>
             </div>
             <p class="text-[14px] font-bold text-slate-800 mb-1 leading-snug">{{ d.title }}</p>
-            <p v-if="d.note" class="text-[12px] text-slate-400 mb-2 line-clamp-1">{{ d.note }}</p>
+            <div class="text-[12px] text-slate-500 mb-1">
+              {{ d.senderOrg || '-' }}<span v-if="d.senderDocNo" class="font-mono text-slate-400 ml-1 text-[11px]"> · {{ d.senderDocNo }}</span>
+            </div>
             <div class="flex flex-wrap items-center gap-x-2 text-[12px] text-slate-500 mb-2">
               <span>{{ d.categoryName || '-' }}</span>
               <span class="text-slate-300">·</span>
@@ -72,11 +74,13 @@
         </div>
 
         <!-- 데스크톱 테이블 -->
+        <div class="overflow-x-auto">
         <table class="hidden md:table w-full text-left whitespace-nowrap">
           <thead>
             <tr class="text-[12px] text-slate-400 border-b border-slate-100 uppercase tracking-wider bg-slate-50/50">
               <th class="px-7 py-4 font-semibold min-w-[120px]">접수번호</th>
               <th class="px-7 py-4 font-semibold">분류</th>
+              <th class="px-7 py-4 font-semibold min-w-[130px]">발신기관<span class="block text-[10px] font-normal text-slate-400 normal-case tracking-normal">발신문서번호</span></th>
               <th class="px-7 py-4 font-semibold min-w-[200px] w-full">제목 및 개요</th>
               <th class="px-7 py-4 font-semibold whitespace-nowrap">담당자</th>
               <th class="px-7 py-4 font-semibold whitespace-nowrap">검토 상태</th>
@@ -85,8 +89,16 @@
           </thead>
           <tbody class="divide-y divide-slate-50">
             <tr v-for="d in results" :key="d.id" @click="openDocDetail(d)" class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-              <td class="px-7 py-4 text-[13px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</td>
+              <td class="px-7 py-4">
+                <div class="text-[10px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">{{ formatDate(d.receiptDate) }}</div>
+              </td>
               <td class="px-7 py-4 text-[13px] text-slate-500">{{ d.categoryName || '-' }}</td>
+              <td class="px-7 py-4 whitespace-normal">
+                <p class="text-[13px] text-slate-600 line-clamp-1">{{ d.senderOrg || '-' }}</p>
+                <p v-if="d.senderDocNo" class="text-[10px] font-mono text-slate-500 mt-0.5">{{ d.senderDocNo }}</p>
+                <p v-if="d.senderDocDate" class="text-[10px] text-slate-400">{{ formatDateStr(d.senderDocDate) }}</p>
+              </td>
               <td class="px-7 py-4 whitespace-normal">
                 <p class="text-[14px] font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ d.title }}</p>
                 <p class="text-[12px] text-slate-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
@@ -121,6 +133,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </template>
     </div>
 
@@ -221,8 +234,14 @@ const doSearch = async () => {
 
 const formatDate = (dateObj) => {
   if (!dateObj) return '-'
-  const d = new Date(dateObj)
+  const d = dateObj?.toDate ? dateObj.toDate() : new Date(dateObj)
   return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`
+}
+
+const formatDateStr = (str) => {
+  if (!str) return ''
+  const [y, m, d] = str.split('-').map(Number)
+  return `${y}.${m}.${d}`
 }
 
 onMounted(() => {

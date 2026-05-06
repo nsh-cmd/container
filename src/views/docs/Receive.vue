@@ -13,8 +13,12 @@
             <input v-model="form.senderOrg" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: 여수시청">
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-600 block mb-1">발신 문서번호</label>
-            <input v-model="form.senderDocNo" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: 노인장애인과-620">
+            <label class="text-xs font-semibold text-gray-600 block mb-1">발신 문서번호 <span class="text-gray-400 font-normal text-[10px]">(시행부서 - 번호)</span></label>
+            <div class="flex items-center gap-2">
+              <input v-model="form.senderDept" class="flex-1 border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="노인장애인과">
+              <span class="text-gray-400 font-bold text-lg shrink-0">-</span>
+              <input v-model="form.senderDocNum" class="w-28 border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="1234">
+            </div>
           </div>
         </div>
 
@@ -23,7 +27,7 @@
           <input v-model="form.title" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="공문 제목을 정확히 입력하세요">
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <label class="text-xs font-semibold text-gray-600 block mb-1">문서 분류 <span class="text-red-500">*</span></label>
             <select v-model="form.category" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
@@ -37,6 +41,10 @@
               <option value="">미배정 (접수대기)</option>
               <option v-for="u in users" :key="u.email" :value="u">{{ u.name }} ({{ u.email }})</option>
             </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600 block mb-1">시행일자 <span class="text-gray-400 font-normal text-[10px]">(선택)</span></label>
+            <input v-model="form.senderDocDate" type="date" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600 block mb-1">원문 접수 일시 <span class="text-red-500">*</span></label>
@@ -145,7 +153,9 @@ const totalFileSize = computed(() => attachedFiles.value.reduce((sum, f) => sum 
 
 const form = ref({
   senderOrg: '',
-  senderDocNo: '',
+  senderDept: '',
+  senderDocNum: '',
+  senderDocDate: '',
   title: '',
   category: '', // object { code, name }
   assignee: '', // 담당자 배정
@@ -295,13 +305,18 @@ const submitDoc = async () => {
       ? applyAutoSkip(reviewSteps.value, form.value.assignee.email, form.value.assignee.name)
       : JSON.parse(JSON.stringify(reviewSteps.value))
 
+    const senderDocNo = [form.value.senderDept, form.value.senderDocNum].filter(Boolean).join('-')
+
     const docData = {
       receiptNo,
       receiptDate: new Date(form.value.receiptDate),
       receiptUserEmail: authStore.user.email,
       receiptUserName: authStore.profile.name,
       senderOrg: form.value.senderOrg,
-      senderDocNo: form.value.senderDocNo,
+      senderDocNo,
+      senderDept: form.value.senderDept,
+      senderDocNum: form.value.senderDocNum,
+      senderDocDate: form.value.senderDocDate || null,
       title: form.value.title,
       category: form.value.category.code,
       categoryName: form.value.category.name,

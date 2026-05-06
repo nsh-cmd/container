@@ -40,6 +40,7 @@
               <tr class="text-[12px] text-slate-400 border-b border-slate-100 uppercase tracking-wider">
                 <th class="px-4 py-3 font-semibold">접수번호</th>
                 <th class="px-4 py-3 font-semibold">분류</th>
+                <th class="px-4 py-3 font-semibold min-w-[130px]">발신기관<span class="block text-[10px] font-normal text-slate-400 normal-case tracking-normal">발신문서번호</span></th>
                 <th class="px-4 py-3 font-semibold min-w-[200px]">제목 및 개요</th>
                 <th class="px-4 py-3 font-semibold">담당자</th>
                 <th class="px-4 py-3 font-semibold">검토 상태</th>
@@ -48,8 +49,16 @@
             </thead>
             <tbody class="divide-y divide-slate-50">
               <tr v-for="d in recentDocs" :key="d.id" @click="goToSearch(d)" class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                <td class="px-4 py-4 text-[13px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</td>
+                <td class="px-4 py-4">
+                  <div class="text-[10px] font-mono font-bold text-indigo-600">{{ d.receiptNo }}</div>
+                  <div class="text-[10px] text-slate-400 mt-0.5">{{ formatDate(d.receiptDate) }}</div>
+                </td>
                 <td class="px-4 py-4 text-[13px] text-slate-500">{{ d.categoryName || '-' }}</td>
+                <td class="px-4 py-4 whitespace-normal">
+                  <p class="text-[13px] text-slate-600 line-clamp-1">{{ d.senderOrg || '-' }}</p>
+                  <p v-if="d.senderDocNo" class="text-[10px] font-mono text-slate-500 mt-0.5">{{ d.senderDocNo }}</p>
+                  <p v-if="d.senderDocDate" class="text-[10px] text-slate-400">{{ formatDateStr(d.senderDocDate) }}</p>
+                </td>
                 <td class="px-4 py-4 whitespace-normal">
                   <p class="text-[14px] font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ d.title }}</p>
                   <p class="text-[12px] text-slate-500 mt-0.5 line-clamp-1">{{ d.note || '특이사항 없음' }}</p>
@@ -84,7 +93,7 @@
                 </td>
               </tr>
               <tr v-if="recentDocs.length === 0">
-                <td colspan="6" class="px-4 py-10 text-center text-slate-400 text-[13px]">최근 등록된 문서가 없습니다.</td>
+                <td colspan="7" class="px-4 py-10 text-center text-slate-400 text-[13px]">최근 등록된 문서가 없습니다.</td>
               </tr>
             </tbody>
           </table>
@@ -113,6 +122,18 @@ const goToSearch = (doc) => {
 const stepTitle = (step) => {
   const titles = { 1: '실장', 2: '국장', 3: '원장' }
   return titles[step.level] || step.label
+}
+
+const formatDate = (dateObj) => {
+  if (!dateObj) return '-'
+  const d = dateObj?.toDate ? dateObj.toDate() : new Date(dateObj)
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`
+}
+
+const formatDateStr = (str) => {
+  if (!str) return ''
+  const [y, m, d] = str.split('-').map(Number)
+  return `${y}.${m}.${d}`
 }
 
 const userInitial = computed(() => {
