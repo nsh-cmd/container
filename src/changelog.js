@@ -1,7 +1,15 @@
-export const APP_VERSION = '1.9.0'
+export const APP_VERSION = '1.9.1'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.9.1',
+    date: '2026.05.06',
+    changes: [
+      'npm 보안 취약점 2건 수정: postcss XSS(moderate) · protobufjs 임의코드실행(critical) 패치',
+      '배포 메뉴얼 STEP 3: git clone 전 설치 폴더 지정 cd 명령어 안내 추가 (Windows/Mac 각각)',
+    ]
+  },
   {
     version: '1.9.0',
     date: '2026.05.06',
