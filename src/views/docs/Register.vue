@@ -121,10 +121,11 @@
             <div v-if="d.reviewSteps && d.reviewSteps.length > 0" class="mt-2 pt-2.5 border-t border-slate-50 flex flex-wrap gap-2">
               <div v-for="(step, sIdx) in d.reviewSteps" :key="sIdx" class="flex flex-col items-center gap-0.5">
                 <span class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
-                  :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')">
-                  {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
+                  :class="isAutoSkipped(step) ? 'bg-amber-50 text-amber-700 border-amber-200' : (step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200'))">
+                  {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ isAutoSkipped(step) ? ' 검토생략' : (step.isApproved ? '✓' : '') }}
                 </span>
-                <span v-if="step.isApproved && step.approvedAt" class="text-[9px] font-medium text-emerald-500">{{ formatShortDate(step.approvedAt) }}</span>
+                <span v-if="isAutoSkipped(step)" class="text-[9px] font-medium text-amber-600">생략</span>
+                <span v-else-if="step.isApproved && step.approvedAt" class="text-[9px] font-medium text-emerald-500">{{ formatShortDate(step.approvedAt) }}</span>
                 <span v-else-if="step.isRead && step.readAt" class="text-[9px] text-indigo-400">{{ formatShortDate(step.readAt) }}</span>
               </div>
             </div>
@@ -141,10 +142,10 @@
                 <th class="px-4 py-3 font-semibold min-w-[110px]         print:w-[11%]">접수번호<br class="hidden print:block"><span class="hidden print:inline text-[7px] font-normal">(접수일)</span></th>
                 <th class="px-4 py-3 font-semibold min-w-[80px]          print:w-[5%]">분류</th>
                 <th class="px-4 py-3 font-semibold min-w-[140px]         print:w-[14%]">발신기관<br class="hidden print:block"><span class="hidden print:inline text-[7px] font-normal">(발신문서번호/시행일자)</span><span class="md:block hidden text-[10px] font-normal text-slate-400 normal-case tracking-normal">발신문서번호</span></th>
-                <th class="px-4 py-3 font-semibold min-w-[200px] w-full  print:w-[29%]">문서 제목</th>
+                <th class="px-4 py-3 font-semibold min-w-[200px] w-full  print:w-[31%]">문서 제목</th>
                 <th class="px-4 py-3 font-semibold min-w-[70px]          print:w-[7%]">담당자</th>
                 <th class="px-4 py-3 font-semibold min-w-[70px]          print:w-[7%]">접수자</th>
-                <th class="px-4 py-3 font-semibold min-w-[240px]         print:w-[17%]">검토 현황 (일자)</th>
+                <th class="px-4 py-3 font-semibold min-w-[240px]         print:w-[15%]">검토 현황<br class="hidden print:block"><span class="hidden print:inline text-[7px] font-normal">(직급별)</span></th>
                 <th class="px-4 py-3 font-semibold min-w-[70px]          print:w-[7%]">상태</th>
                 <th class="px-4 py-3 font-semibold min-w-[50px] print:hidden">첨부</th>
               </tr>
@@ -176,24 +177,36 @@
                 <td class="px-4 py-3 text-[13px] text-slate-500">{{ d.receiptUserName || '-' }}</td>
                 <!-- 검토 현황 -->
                 <td class="px-4 py-3">
-                  <div class="flex items-start gap-2 flex-wrap print:flex-nowrap print:gap-1 print:justify-center">
+                  <!-- 화면용: 배지 그룹 -->
+                  <div class="print:hidden flex items-start gap-2 flex-wrap">
                     <template v-if="d.reviewSteps && d.reviewSteps.length > 0">
                       <div v-for="(step, sIdx) in d.reviewSteps" :key="sIdx" class="flex flex-col items-center gap-0.5">
-                        <span class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium whitespace-nowrap
-                                     print:text-[7px] print:px-0.5 print:py-0 print:border-gray-400 print:rounded-none"
-                              :class="step.isApproved
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 print:bg-transparent print:text-black'
-                                : (step.isRead
-                                  ? 'bg-indigo-50 text-indigo-600 border-indigo-100 print:bg-transparent print:text-black'
-                                  : 'bg-slate-50 text-slate-400 border-slate-200 print:bg-transparent print:text-gray-500')">
-                          {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
+                        <span class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium whitespace-nowrap"
+                              :class="isAutoSkipped(step)
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : (step.isApproved
+                                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                  : (step.isRead
+                                    ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                    : 'bg-slate-50 text-slate-400 border-slate-200'))">
+                          {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ isAutoSkipped(step) ? ' 검토생략' : (step.isApproved ? '✓' : '') }}
                         </span>
-                        <span v-if="step.isApproved && step.approvedAt" class="text-[9px] font-medium text-emerald-500 print:text-[6px] print:text-black">{{ formatShortDate(step.approvedAt) }}</span>
-                        <span v-else-if="step.isRead && step.readAt" class="text-[9px] text-indigo-400 print:text-[6px] print:text-gray-600">{{ formatShortDate(step.readAt) }}</span>
-                        <span v-else class="text-[9px] text-slate-300 print:hidden">-</span>
+                        <span v-if="isAutoSkipped(step)" class="text-[9px] font-medium text-amber-600">생략</span>
+                        <span v-else-if="step.isApproved && step.approvedAt" class="text-[9px] font-medium text-emerald-500">{{ formatShortDate(step.approvedAt) }}</span>
+                        <span v-else-if="step.isRead && step.readAt" class="text-[9px] text-indigo-400">{{ formatShortDate(step.readAt) }}</span>
+                        <span v-else class="text-[9px] text-slate-300">-</span>
                       </div>
                     </template>
                     <span v-else class="text-[11px] text-slate-400">-</span>
+                  </div>
+                  <!-- 인쇄용: 직급별 컴팩트 행 표시 -->
+                  <div class="hidden print:block text-center leading-snug">
+                    <template v-if="d.reviewSteps && d.reviewSteps.length > 0">
+                      <div v-for="(step, sIdx) in d.reviewSteps" :key="sIdx">
+                        {{ stepTitle(step) }}: {{ isAutoSkipped(step) ? '생략' : (step.isApproved ? '승인' : (step.isRead ? '확인' : '대기')) }}<template v-if="!isAutoSkipped(step) && step.isApproved && step.approvedAt"> ({{ formatShortDate(step.approvedAt) }})</template><template v-else-if="!isAutoSkipped(step) && step.isRead && step.readAt"> ({{ formatShortDate(step.readAt) }})</template>
+                      </div>
+                    </template>
+                    <template v-else>-</template>
                   </div>
                 </td>
                 <!-- 상태 -->
@@ -227,6 +240,7 @@ import { ref, computed, onMounted } from 'vue'
 import { db } from '../../firebase/config'
 import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore'
 import { useSettingsStore } from '../../store/settings'
+import { isAutoSkipped } from '../../utils/docUtils'
 
 const settingsStore = useSettingsStore()
 

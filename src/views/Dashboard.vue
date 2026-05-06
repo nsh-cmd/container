@@ -74,11 +74,11 @@
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span v-if="!d.reviewSteps || d.reviewSteps.length === 0" class="text-[12px] text-slate-400">-</span>
-                    <span v-for="(step, idx) in d.reviewSteps" :key="idx" 
+                    <span v-for="(step, idx) in d.reviewSteps" :key="idx"
                           class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
-                          :class="step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200')"
-                          :title="stepTitle(step) + '(' + (step.name || '미지정') + ') ' + (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인'))">
-                      {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ step.isApproved ? '✓' : '' }}
+                          :class="isAutoSkipped(step) ? 'bg-amber-50 text-amber-700 border-amber-200' : (step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200'))"
+                          :title="stepTitle(step) + '(' + (step.name || '미지정').replace(/ *\(자동생략\)/, '') + ') ' + (isAutoSkipped(step) ? '검토생략' : (step.isApproved ? '승인완료' : (step.isRead ? '확인중' : '미확인')))">
+                      {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ isAutoSkipped(step) ? ' 검토생략' : (step.isApproved ? '✓' : '') }}
                     </span>
                   </div>
                 </td>
@@ -108,6 +108,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import { db } from '../firebase/config'
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
+import { isAutoSkipped } from '../utils/docUtils'
 
 const authStore = useAuthStore()
 const router = useRouter()

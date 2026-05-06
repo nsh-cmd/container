@@ -71,7 +71,7 @@ const openDocDetail = (doc) => {
 const loadData = async () => {
   loading.value = true
   try {
-    const userSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer']), where('active', '==', true)))
+    const userSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer', 'admin']), where('active', '==', true)))
     users.value = userSnap.docs.map(d => d.data())
 
     const q = query(collection(db, 'documents'), where('status', '==', '접수대기'))

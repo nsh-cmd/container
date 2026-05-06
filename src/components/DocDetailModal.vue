@@ -123,10 +123,11 @@
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500')">
-                  {{ step.isApproved ? '승인 완료' : (step.isRead ? '확인 중' : '대기중') }}
+                <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="isAutoSkipped(step) ? 'bg-amber-100 text-amber-700' : (step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'))">
+                  {{ isAutoSkipped(step) ? '검토생략' : (step.isApproved ? '승인 완료' : (step.isRead ? '확인 중' : '대기중')) }}
                 </div>
-                <p v-if="step.isApproved && step.approvedAt" class="text-[10px] text-slate-400">승인: {{ formatDate(step.approvedAt) }}</p>
+                <p v-if="isAutoSkipped(step)" class="text-[10px] text-amber-600">검토 단계 자동 생략됨</p>
+                <p v-else-if="step.isApproved && step.approvedAt" class="text-[10px] text-slate-400">승인: {{ formatDate(step.approvedAt) }}</p>
                 <p v-else-if="step.isRead && step.readAt" class="text-[10px] text-slate-400">읽음: {{ formatDate(step.readAt) }}</p>
               </div>
             </div>
@@ -189,6 +190,7 @@ import { computed, ref } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { db } from '../firebase/config'
 import { doc, updateDoc } from 'firebase/firestore'
+import { isAutoSkipped } from '../utils/docUtils'
 
 const authStore = useAuthStore()
 const currentUserEmail = computed(() => authStore.user?.email)

@@ -1,7 +1,18 @@
-export const APP_VERSION = '1.5.0'
+export const APP_VERSION = '1.6.0'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.6.0',
+    date: '2026.05.06',
+    changes: [
+      '검토생략 표시: 2차·3차 검토자에게 직접 배정 시 이전 단계를 amber(주황) "검토생략"으로 표기',
+      '검토생략 식별: applyAutoSkip이 추가하는 (자동생략) 마커 기반, 별도 DB 마이그레이션 불필요',
+      '인쇄 검토현황 개선: 직급(000)검토생략 → 실장/국장/원장 각 행별 컴팩트 표시 (생략/승인/확인/대기)',
+      '담당자 배정 목록 확장: 관리자(admin) 역할 사용자도 담당자로 배정 가능 (원장 직접 배정 지원)',
+      '대시보드·검색·모달·접수대장 5곳 검토생략 표시 일괄 적용',
+    ]
+  },
   {
     version: '1.5.0',
     date: '2026.05.06',

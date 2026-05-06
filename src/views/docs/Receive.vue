@@ -173,7 +173,7 @@ const loadSettings = async () => {
     reviewSteps.value = flowSnap.data().steps.map(s => ({ ...s, readAt: null, isRead: false }))
   }
 
-  const userSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer']), where('active', '==', true)))
+  const userSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer', 'admin']), where('active', '==', true)))
   users.value = userSnap.docs.map(d => d.data())
 }
 

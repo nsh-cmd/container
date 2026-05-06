@@ -64,3 +64,11 @@ export const extractReviewerEmails = (reviewSteps) => {
   if (!reviewSteps) return []
   return [...new Set(reviewSteps.filter(s => s.email).map(s => s.email))]
 }
+
+/**
+ * applyAutoSkip이 추가한 '(자동생략)' 마커로 자동생략 단계를 식별합니다.
+ * 실제 검토자 승인과 자동 생략을 UI에서 구분할 때 사용합니다.
+ */
+export const isAutoSkipped = (step) => {
+  return !!(step?.name && step.name.includes('(자동생략)'))
+}
