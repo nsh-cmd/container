@@ -77,8 +77,29 @@ npm -v</pre>
             </div>
 
             <!-- STEP 3: CLI + 코드 받기 -->
-            <div class="px-6 py-4 space-y-2">
+            <div class="px-6 py-4 space-y-3">
               <p class="font-bold text-sm text-gray-800">STEP 3. Firebase CLI 설치 및 코드 받기</p>
+
+              <!-- 설치 폴더 이동 안내 -->
+              <div class="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 space-y-2">
+                <p class="font-semibold text-sky-800 text-[11px]">📁 먼저 원하는 폴더로 이동하세요 (터미널이 기본 시스템 폴더로 열릴 수 있음)</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <p class="text-[10px] text-sky-700 font-semibold mb-1">🪟 Windows (PowerShell / CMD)</p>
+                    <pre class="bg-gray-900 text-green-400 rounded-lg px-3 py-2 text-[11px] font-mono">cd C:\Users\사용자명\Desktop
+rem 또는 원하는 경로 예시:
+cd D:\work\apps</pre>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-sky-700 font-semibold mb-1">🍎 Mac (Terminal)</p>
+                    <pre class="bg-gray-900 text-green-400 rounded-lg px-3 py-2 text-[11px] font-mono">cd ~/Desktop
+# 또는 원하는 경로 예시:
+cd ~/Documents/apps</pre>
+                  </div>
+                </div>
+                <p class="text-[10px] text-sky-600">💡 <code class="bg-sky-100 px-0.5 rounded">cd</code> 명령어로 폴더를 먼저 이동한 뒤 clone을 실행하면 해당 폴더 안에 설치됩니다.</p>
+              </div>
+
               <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-3 text-[11px] font-mono leading-relaxed">npm install -g firebase-tools    ← Firebase 배포 도구 설치
 firebase login                   ← 구글 계정으로 로그인 (브라우저 자동 열림)
 
