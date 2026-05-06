@@ -260,8 +260,17 @@
         </div>
       </section>
 
-      <!-- 배포 가이드 -->
-      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- 배포 가이드 (SetupWizard로 이동됨) -->
+      <section class="bg-indigo-50 rounded-2xl border border-indigo-100 px-6 py-4 flex items-center justify-between">
+        <div>
+          <p class="font-bold text-indigo-800">📦 배포 가이드 (제3자 설치 매뉴얼)</p>
+          <p class="text-xs text-indigo-600 mt-0.5">초기설정 페이지에서 확인할 수 있습니다.</p>
+        </div>
+        <router-link to="/setup" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition whitespace-nowrap">초기설정 페이지 열기 →</router-link>
+      </section>
+
+      <!-- (삭제됨: 아래 내용은 SetupWizard로 이동) -->
+      <section v-if="false" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
           <div>
             <h2 class="font-bold text-gray-800">📦 배포 가이드 (제3자 설치 매뉴얼)</h2>
@@ -606,8 +615,7 @@ const guideOpen = reactive({
   slack: false,
   gas: false,
   cat: false,
-  review: false,
-  deploy: false
+  review: false
 })
 
 const categories = ref([

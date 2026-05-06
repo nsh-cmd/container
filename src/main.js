@@ -27,9 +27,10 @@ authStore.init().then(async () => {
       return next('/setup')
     }
 
-    // 2. 초기설정 완료 후 /setup 재접근 → 대시보드로
+    // 2. 초기설정 완료 후 /setup 재접근 → 관리자는 허용, 일반은 대시보드로
     if (to.path === '/setup' && isSetupDone) {
-      return next('/')
+      const isAdmin = authStore.profile?.role === 'admin'
+      if (!isAdmin) return next('/')
     }
 
     // 3. 인증 필요 페이지 + 미로그인

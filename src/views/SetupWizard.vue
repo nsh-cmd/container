@@ -12,6 +12,168 @@
 
       <div class="space-y-6">
 
+        <!-- 배포 가이드 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
+            <div>
+              <h2 class="font-bold text-gray-800">📦 배포 가이드 (제3자 설치 매뉴얼)</h2>
+              <p class="text-xs text-gray-500 mt-0.5">이 앱을 새로 설치하거나 다른 기관에 배포할 때 참고하세요.</p>
+            </div>
+            <button @click="toggleGuide('deploy')" class="text-xs text-blue-600 font-semibold hover:text-blue-800 flex items-center gap-1 transition whitespace-nowrap">
+              📖 <span>{{ guideOpen.deploy ? '닫기' : '매뉴얼 보기' }}</span>
+            </button>
+          </div>
+
+          <div v-if="guideOpen.deploy" class="divide-y divide-gray-100 text-xs text-gray-700 leading-relaxed">
+
+            <!-- 배포 구조 개요 -->
+            <div class="px-6 py-4 bg-indigo-50/40 space-y-2">
+              <p class="font-bold text-sm text-indigo-900">⚙️ 배포 구조</p>
+              <p class="text-indigo-700">각 기관이 <strong>자신의 Firebase 프로젝트</strong>를 만들어 연결하는 방식입니다.<br>비용·데이터 모두 각자 부담하며, 중앙 서버나 SaaS 비용이 없습니다.</p>
+              <div class="bg-white border border-indigo-100 rounded-xl px-4 py-3 font-mono text-[11px] text-indigo-800 space-y-1">
+                <div>① GitHub에서 코드 받기 (git clone)</div>
+                <div>② 자신의 Firebase 프로젝트 생성</div>
+                <div>③ .env 파일에 Firebase 설정값 입력</div>
+                <div>④ 빌드(npm run build) → 배포(firebase deploy)</div>
+                <div>⑤ 앱 접속 → 이 초기설정 페이지에서 완료</div>
+              </div>
+              <p class="text-indigo-600 font-semibold">GitHub 주소: <a href="https://github.com/nsh-cmd/container" target="_blank" class="underline">https://github.com/nsh-cmd/container</a></p>
+            </div>
+
+            <!-- STEP 1: Node.js -->
+            <div class="px-6 py-4 space-y-2">
+              <p class="font-bold text-sm text-gray-800">STEP 1. Node.js 설치 확인</p>
+              <p class="text-gray-600">터미널(명령 프롬프트)을 열고 아래 명령어로 설치 여부를 확인합니다.</p>
+              <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-2 text-[11px] font-mono">node -v
+npm -v</pre>
+              <p class="text-gray-500">버전 번호가 출력되면 설치된 것입니다. <strong>v18 이상</strong>을 권장합니다.</p>
+              <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 space-y-2">
+                <p class="font-semibold text-amber-800">⬇️ 미설치 시 설치 방법</p>
+                <div class="space-y-1 text-amber-700">
+                  <p><strong>Windows:</strong> <a href="https://nodejs.org" target="_blank" class="underline font-semibold">nodejs.org</a> 접속 → <strong>LTS 버전</strong> 다운로드 → .msi 설치 파일 실행 → 기본값으로 Next 클릭</p>
+                  <p><strong>Mac:</strong> 터미널에서 <code class="bg-amber-100 px-1 rounded">brew install node</code> 실행 또는 위 사이트에서 .pkg 다운로드</p>
+                  <p class="text-amber-600">⚠️ 설치 후 터미널을 <strong>완전히 닫았다가 다시 열어야</strong> node 명령어가 인식됩니다.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 2: 터미널 열기 -->
+            <div class="px-6 py-4 space-y-2">
+              <p class="font-bold text-sm text-gray-800">STEP 2. 터미널 열기 및 권한 안내</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="bg-blue-50 rounded-xl px-4 py-3 space-y-1">
+                  <p class="font-semibold text-blue-800">🪟 Windows</p>
+                  <p class="text-blue-700"><strong>방법 1</strong>: 시작 → <strong>PowerShell</strong> 검색 → 우클릭 → <strong>관리자 권한으로 실행</strong></p>
+                  <p class="text-blue-700"><strong>방법 2</strong>: Win+R → <code class="bg-blue-100 px-1 rounded">cmd</code> → Enter</p>
+                  <p class="text-blue-600 text-[10px]">⚠️ npm install이 권한 오류 날 경우 관리자 권한으로 실행</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl px-4 py-3 space-y-1">
+                  <p class="font-semibold text-slate-800">🍎 Mac</p>
+                  <p class="text-slate-700"><strong>방법</strong>: Spotlight(Cmd+Space) → <strong>Terminal</strong> 검색</p>
+                  <p class="text-slate-700">또는 Finder → 응용프로그램 → 유틸리티 → Terminal</p>
+                  <p class="text-slate-600 text-[10px]">⚠️ 권한 오류 시 명령어 앞에 <code class="bg-slate-200 px-1 rounded">sudo</code> 추가</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: CLI + 코드 받기 -->
+            <div class="px-6 py-4 space-y-2">
+              <p class="font-bold text-sm text-gray-800">STEP 3. Firebase CLI 설치 및 코드 받기</p>
+              <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-3 text-[11px] font-mono leading-relaxed">npm install -g firebase-tools    ← Firebase 배포 도구 설치
+firebase login                   ← 구글 계정으로 로그인 (브라우저 자동 열림)
+
+git clone https://github.com/nsh-cmd/container.git
+cd container
+npm install                      ← 패키지 설치 (수분 소요)</pre>
+              <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-2 text-amber-700">
+                ⚠️ <strong>git이 없는 경우</strong>: <a href="https://git-scm.com" target="_blank" class="underline font-semibold">git-scm.com</a>에서 설치 후 터미널 재시작.
+                또는 GitHub 페이지에서 <strong>Code → Download ZIP</strong>으로 다운로드 후 압축 해제
+              </div>
+            </div>
+
+            <!-- STEP 4: Firebase + .env -->
+            <div class="px-6 py-4 space-y-3">
+              <p class="font-bold text-sm text-gray-800">STEP 4. Firebase 프로젝트 생성 및 .env 파일 설정</p>
+              <div class="space-y-1">
+                <p class="font-semibold text-gray-700">① Firebase 프로젝트 생성</p>
+                <ol class="list-decimal list-inside space-y-1 text-gray-600 ml-2">
+                  <li><a href="https://console.firebase.google.com" target="_blank" class="underline font-semibold">console.firebase.google.com</a> → <strong>프로젝트 추가</strong></li>
+                  <li>프로젝트 이름 입력 → 만들기</li>
+                  <li><strong>빌드 → Authentication → 시작하기 → 이메일/비밀번호</strong> 활성화</li>
+                  <li><strong>빌드 → Firestore Database → 데이터베이스 만들기 → 프로덕션 모드</strong></li>
+                </ol>
+              </div>
+              <div class="space-y-1">
+                <p class="font-semibold text-gray-700">② Firebase 설정값 찾기</p>
+                <ol class="list-decimal list-inside space-y-1 text-gray-600 ml-2">
+                  <li>Firebase Console → <strong>프로젝트 설정(⚙️) → 일반 탭 → 내 앱 영역</strong></li>
+                  <li>웹 앱이 없으면 <strong>&lt;/&gt;</strong> 클릭 → 앱 등록</li>
+                  <li><code class="bg-gray-100 px-1 rounded">firebaseConfig</code> 객체에서 각 값 확인</li>
+                </ol>
+              </div>
+              <div class="space-y-1">
+                <p class="font-semibold text-gray-700">③ .env 파일 작성 (코드 루트 폴더에 생성)</p>
+                <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-3 text-[11px] font-mono leading-relaxed">VITE_FIREBASE_API_KEY=AIzaSy...
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123:web:abcdef
+VITE_ADMIN_EMAIL=admin@yourdomain.com</pre>
+                <div class="bg-red-50 border border-red-100 rounded-xl px-4 py-2 text-red-700 space-y-1">
+                  <p>⚠️ <strong>.env 파일은 GitHub에 올라가지 않습니다.</strong> 각자 직접 작성해야 합니다.</p>
+                  <p>⚠️ Windows 메모장 저장 시 파일명을 <code class="bg-red-100 px-1 rounded">".env"</code> (따옴표 포함)로 입력해야 확장자 없이 저장됩니다.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 5: 빌드 + 배포 -->
+            <div class="px-6 py-4 space-y-2">
+              <p class="font-bold text-sm text-gray-800">STEP 5. 빌드 및 Firebase 배포</p>
+              <pre class="bg-gray-900 text-green-400 rounded-lg px-4 py-3 text-[11px] font-mono leading-relaxed">npm run build
+
+firebase init hosting
+  → 프로젝트 선택: 방금 만든 프로젝트 선택
+  → public directory: dist
+  → single-page app: Yes
+  → GitHub auto-deploy: No
+
+firebase deploy --only hosting,firestore:rules</pre>
+              <p class="text-gray-600">배포 완료 후 출력되는 <strong>Hosting URL</strong>(xxx.web.app)로 접속하면 이 초기설정 페이지가 나타납니다.</p>
+            </div>
+
+            <!-- 오류 안내 -->
+            <div class="px-6 py-4 bg-gray-50/50 space-y-2">
+              <p class="font-bold text-sm text-gray-800">🙋 설치 중 문제가 발생했다면</p>
+              <p class="text-gray-600">오류 메시지 전체와 어느 단계에서 발생했는지 캡처하여 담당자에게 전달하세요.</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                <div class="bg-white border border-gray-100 rounded-lg px-3 py-2">
+                  <p class="font-semibold text-gray-700 mb-1">자주 발생하는 오류</p>
+                  <ul class="space-y-1 text-gray-500">
+                    <li>· <code class="bg-gray-100 px-0.5 rounded">npm: command not found</code> → Node.js 재설치</li>
+                    <li>· <code class="bg-gray-100 px-0.5 rounded">EACCES permission denied</code> → 관리자 권한 터미널</li>
+                    <li>· <code class="bg-gray-100 px-0.5 rounded">Firebase: Error (auth/...)</code> → Authentication 활성화 확인</li>
+                    <li>· <code class="bg-gray-100 px-0.5 rounded">Missing or insufficient permissions</code> → Firestore 규칙 배포 확인</li>
+                    <li>· 빌드 후 흰 화면 → .env 파일 내용 재확인</li>
+                  </ul>
+                </div>
+                <div class="bg-white border border-gray-100 rounded-lg px-3 py-2">
+                  <p class="font-semibold text-gray-700 mb-1">점검 체크리스트</p>
+                  <ul class="space-y-1 text-gray-500">
+                    <li>☐ Node.js v18 이상 설치됨</li>
+                    <li>☐ .env 파일이 코드 루트 폴더에 있음</li>
+                    <li>☐ Firebase Auth 이메일/비밀번호 활성화</li>
+                    <li>☐ Firestore 데이터베이스 생성됨</li>
+                    <li>☐ firebase deploy에 firestore:rules 포함</li>
+                    <li>☐ 브라우저 캐시 삭제 후 재접속</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
         <!-- 0. Firebase 연결 확인 -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
@@ -360,7 +522,8 @@ const firebaseInfo = reactive({
 })
 
 const guideOpen = reactive({
-  firebase: true,  // Firebase 설정 안내를 기본 열림
+  deploy: false,
+  firebase: true,
   org: false,
   slack: false,
   gas: false
