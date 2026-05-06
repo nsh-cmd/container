@@ -302,7 +302,7 @@ const submitDoc = async () => {
     // 2. 자동생략 적용
     const isAssigned = !!form.value.assignee
     const finalReviewSteps = isAssigned
-      ? applyAutoSkip(reviewSteps.value, form.value.assignee.email, form.value.assignee.name)
+      ? applyAutoSkip(reviewSteps.value, form.value.assignee.email, form.value.assignee.name, form.value.assignee.department)
       : JSON.parse(JSON.stringify(reviewSteps.value))
 
     const senderDocNo = [form.value.senderDept, form.value.senderDocNum].filter(Boolean).join('-')

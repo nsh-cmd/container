@@ -5,18 +5,22 @@ import { db } from '../firebase/config'
  * 담당자가 검토 단계에 포함될 경우 그 이전 단계를 자동생략 처리합니다.
  * Receive.vue / Assign.vue 공통 사용
  */
-export const applyAutoSkip = (reviewSteps, assigneeEmail, assigneeName) => {
+export const applyAutoSkip = (reviewSteps, assigneeEmail, assigneeName, assigneeDept) => {
   if (!reviewSteps || reviewSteps.length === 0) return reviewSteps
 
   const steps = JSON.parse(JSON.stringify(reviewSteps))
   const email = (assigneeEmail || '').trim()
   const name = (assigneeName || '').trim()
+  const dept = (assigneeDept || '').trim()
 
   let matchIdx = -1
   for (let i = steps.length - 1; i >= 0; i--) {
     const stepEmail = (steps[i].email || '').trim()
     const stepName = (steps[i].name || '').trim()
-    if ((email && stepEmail === email) || (name && stepName === name)) {
+    const stepLabel = (steps[i].label || '').trim()
+    if ((email && stepEmail === email) ||
+        (name && stepName === name) ||
+        (dept && stepLabel === dept)) {
       matchIdx = i
       break
     }

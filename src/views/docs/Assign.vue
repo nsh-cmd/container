@@ -98,7 +98,8 @@ const assignDoc = async (docItem) => {
     const updatedReviewSteps = applyAutoSkip(
       docItem.reviewSteps,
       docItem.selectedAssignee.email,
-      docItem.selectedAssignee.name
+      docItem.selectedAssignee.name,
+      docItem.selectedAssignee.department
     )
 
     await updateDoc(docRef, {
