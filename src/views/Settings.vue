@@ -108,15 +108,57 @@
             📖 <span>{{ guideOpen.gas ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
           </button>
         </div>
-        <div v-if="guideOpen.gas" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
-          <p class="font-semibold">📋 Apps Script 웹앱 URL 설정 방법</p>
-          <ol class="list-decimal list-inside space-y-1 text-blue-700">
-            <li><a href="https://script.google.com" target="_blank" class="underline font-semibold">Google Apps Script</a> → <strong>새 프로젝트</strong></li>
-            <li>공문서 관리 스크립트 작성 (Drive 연동 등)</li>
-            <li><strong>배포 > 새 배포</strong> → 유형: <strong>웹 앱</strong></li>
-            <li>실행 권한: <strong>나</strong>, 액세스: <strong>모든 사용자</strong></li>
-            <li>생성된 웹앱 URL을 아래에 입력</li>
-          </ol>
+        <div v-if="guideOpen.gas" class="border-b border-blue-100 text-xs text-blue-800 leading-relaxed">
+          <!-- 설정 순서 -->
+          <div class="px-6 py-4 bg-blue-50/50 space-y-3">
+            <p class="font-bold text-sm text-blue-900">📋 설정 순서</p>
+            <ol class="list-decimal list-inside space-y-2 text-blue-700">
+              <li><a href="https://script.google.com" target="_blank" class="underline font-semibold">script.google.com</a> 접속 → <strong>새 프로젝트</strong> 생성</li>
+              <li>아래 <strong>전체 스크립트 코드</strong>를 복사하여 편집기에 붙여넣기</li>
+              <li>상단 <strong>프로젝트 설정(⚙️)</strong> → <strong>스크립트 속성</strong> 탭에서 속성 추가:
+                <div class="mt-1.5 ml-4 space-y-1 font-mono bg-white border border-blue-100 rounded-lg px-3 py-2">
+                  <div><span class="text-blue-600 font-bold">DRIVE_FOLDER_ID</span> = Google Drive 폴더 ID <span class="text-blue-400">(필수)</span></div>
+                  <div><span class="text-blue-600 font-bold">SLACK_WEBHOOK_URL</span> = Slack Webhook URL <span class="text-blue-400">(선택)</span></div>
+                  <div><span class="text-blue-600 font-bold">ORG_NAME</span> = 기관명 <span class="text-blue-400">(선택)</span></div>
+                </div>
+              </li>
+              <li><strong>배포 → 새 배포</strong> 클릭 → 유형: <strong>웹 앱</strong> 선택</li>
+              <li>실행 권한: <strong>나(Me)</strong> / 액세스: <strong>모든 사용자(Anyone)</strong></li>
+              <li>배포 후 생성된 URL을 아래 <strong>Apps Script 웹앱 URL</strong> 입력란에 저장</li>
+              <li class="text-blue-500">⚠️ 스크립트 수정 후에는 반드시 <strong>새 버전으로 재배포</strong>해야 변경사항이 적용됩니다.</li>
+            </ol>
+          </div>
+
+          <!-- 스크립트 코드 박스 -->
+          <div class="px-6 py-4 bg-gray-50 space-y-2">
+            <div class="flex items-center justify-between">
+              <p class="font-bold text-gray-700">📄 스크립트 전체 코드</p>
+              <button @click="copyScriptCode" class="flex items-center gap-1.5 bg-gray-800 text-white px-3 py-1.5 rounded-lg text-[11px] font-semibold hover:bg-gray-700 transition">
+                <svg v-if="!scriptCopied" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                {{ scriptCopied ? '복사됨!' : '코드 복사' }}
+              </button>
+            </div>
+            <pre class="bg-gray-900 text-green-300 text-[10px] rounded-xl p-4 overflow-x-auto overflow-y-auto max-h-72 leading-relaxed whitespace-pre font-mono select-all">{{ GAS_SCRIPT }}</pre>
+          </div>
+
+          <!-- 지원 액션 표 -->
+          <div class="px-6 py-3 bg-blue-50/50">
+            <p class="font-semibold text-blue-900 mb-1.5">⚡ 지원 액션</p>
+            <table class="w-full text-[10px] border-collapse">
+              <thead><tr class="bg-blue-100 text-blue-800">
+                <th class="px-2 py-1 text-left rounded-tl font-bold">action</th>
+                <th class="px-2 py-1 text-left font-bold">전달값</th>
+                <th class="px-2 py-1 text-left rounded-tr font-bold">동작</th>
+              </tr></thead>
+              <tbody class="text-blue-700">
+                <tr class="border-t border-blue-100"><td class="px-2 py-1 font-mono font-bold">upload</td><td class="px-2 py-1">receiptNo, fileName, fileBase64, mimeType</td><td class="px-2 py-1">접수번호 폴더 생성 후 파일 업로드</td></tr>
+                <tr class="border-t border-blue-100"><td class="px-2 py-1 font-mono font-bold">deleteFile</td><td class="px-2 py-1">fileId</td><td class="px-2 py-1">파일 휴지통 이동</td></tr>
+                <tr class="border-t border-blue-100"><td class="px-2 py-1 font-mono font-bold">deleteFolder</td><td class="px-2 py-1">folderId</td><td class="px-2 py-1">폴더 전체(파일 포함) 휴지통 이동</td></tr>
+                <tr class="border-t border-blue-100"><td class="px-2 py-1 font-mono font-bold">notify</td><td class="px-2 py-1">text</td><td class="px-2 py-1">Slack 메시지 전송</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
         <div class="p-6 space-y-4">
           <div>
@@ -230,6 +272,143 @@ import { useSettingsStore } from '../store/settings'
 
 const settingsStore = useSettingsStore()
 
+// ── Apps Script 매뉴얼 코드 ──────────────────────────────────────────
+const scriptCopied = ref(false)
+
+const GAS_SCRIPT = `/**
+ * 공문서 관리 시스템 — Google Drive 첨부파일 업로드 & Slack 알림
+ * ⚙️ 스크립트 속성(프로젝트 설정 > 스크립트 속성)에서 아래 값을 설정하세요:
+ *   - DRIVE_FOLDER_ID    : 첨부파일 저장 폴더 ID  (필수)
+ *   - SLACK_WEBHOOK_URL  : Slack 알림 URL          (선택)
+ *   - ORG_NAME           : 기관명, Slack 메시지용  (선택)
+ */
+
+function getConfig(key) {
+  return PropertiesService.getScriptProperties().getProperty(key) || '';
+}
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const action = data.action || 'upload';
+
+    let result;
+    switch (action) {
+      case 'upload':       result = handleFileUpload(data);      break;
+      case 'deleteFile':   result = handleDeleteFile(data);      break;
+      case 'deleteFolder': result = handleDeleteFolder(data);    break;
+      case 'notify':       result = sendSlackNotification(data); break;
+      default: result = { success: false, message: '알 수 없는 action: ' + action };
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ── 파일 업로드 ──────────────────────────────────────────────────────
+function handleFileUpload(data) {
+  const folderId = getConfig('DRIVE_FOLDER_ID');
+  if (!folderId) return { success: false, message: 'DRIVE_FOLDER_ID 설정 안됨' };
+
+  const folder = DriveApp.getFolderById(folderId);
+  const fileName = data.fileName || '첨부파일_' + new Date().getTime();
+  const blob = Utilities.newBlob(
+    Utilities.base64Decode(data.fileBase64),
+    data.mimeType || 'application/octet-stream',
+    fileName
+  );
+
+  let targetFolder = folder;
+  if (data.receiptNo) {
+    const iter = folder.getFoldersByName(data.receiptNo);
+    targetFolder = iter.hasNext() ? iter.next() : folder.createFolder(data.receiptNo);
+  }
+
+  const file = targetFolder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  const slackUrl = getConfig('SLACK_WEBHOOK_URL');
+  if (slackUrl && data.receiptNo) {
+    const orgName = getConfig('ORG_NAME') || '공문서 관리';
+    sendSlack(slackUrl,
+      ':file_folder: *[' + orgName + '] 첨부파일 업로드*\\n' +
+      '> 문서번호: ' + data.receiptNo + '\\n' +
+      '> 파일명: ' + fileName + '\\n' +
+      '> <' + file.getUrl() + '|Drive에서 보기>'
+    );
+  }
+
+  return {
+    success: true,
+    fileId:   file.getId(),
+    fileUrl:  file.getUrl(),
+    fileName: file.getName(),
+    folderId: targetFolder.getId()
+  };
+}
+
+// ── 파일 삭제 (휴지통 이동) ──────────────────────────────────────────
+function handleDeleteFile(data) {
+  if (!data.fileId) return { success: false, message: 'fileId 누락' };
+  try {
+    DriveApp.getFileById(data.fileId).setTrashed(true);
+    return { success: true, message: '파일을 휴지통으로 이동했습니다.' };
+  } catch (err) {
+    return { success: false, message: '파일 삭제 실패: ' + err.message };
+  }
+}
+
+// ── 폴더 삭제 (폴더 내 파일 전체 포함, 휴지통 이동) ────────────────
+function handleDeleteFolder(data) {
+  if (!data.folderId) return { success: false, message: 'folderId 누락' };
+  try {
+    DriveApp.getFolderById(data.folderId).setTrashed(true);
+    return { success: true, message: '폴더를 휴지통으로 이동했습니다.' };
+  } catch (err) {
+    return { success: false, message: '폴더 삭제 실패: ' + err.message };
+  }
+}
+
+// ── Slack 알림 ───────────────────────────────────────────────────────
+function sendSlackNotification(data) {
+  const slackUrl = getConfig('SLACK_WEBHOOK_URL');
+  if (!slackUrl) return { success: false, message: 'SLACK_WEBHOOK_URL 설정 안됨' };
+  sendSlack(slackUrl, data.text || ':bell: 새 알림이 있습니다.');
+  return { success: true };
+}
+
+function sendSlack(webhookUrl, text) {
+  UrlFetchApp.fetch(webhookUrl, {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({ text: text })
+  });
+}
+
+// ── GET 요청 (연결 테스트) ───────────────────────────────────────────
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok', message: '스크립트 정상 작동 중' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}`
+
+const copyScriptCode = async () => {
+  try {
+    await navigator.clipboard.writeText(GAS_SCRIPT)
+    scriptCopied.value = true
+    setTimeout(() => { scriptCopied.value = false }, 2500)
+  } catch (e) {
+    alert('복사 실패: 코드를 직접 선택하여 복사해 주세요.')
+  }
+}
+
+// ── 일반 설정 ────────────────────────────────────────────────────────
 const orgName = ref('')
 const facilityType = ref('')
 const slackWebhookUrl = ref('')

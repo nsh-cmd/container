@@ -1,7 +1,18 @@
-export const APP_VERSION = '1.6.0'
+export const APP_VERSION = '1.7.0'
 export const APP_VERSION_DATE = '2026.05.06'
 
 export const CHANGELOG = [
+  {
+    version: '1.7.0',
+    date: '2026.05.06',
+    changes: [
+      '문서 수정: 관리자·접수자 권한으로 제목·발신기관·분류·메모 등 수정 가능',
+      '문서 삭제: 관리자·접수자 권한으로 문서 삭제, Google Drive 파일·폴더 동시 삭제',
+      '첨부파일 관리: 수정 시 기존 첨부파일 제거 및 신규 파일 추가 업로드 지원',
+      'Apps Script 연동 개선: deleteFile·deleteFolder 액션 추가, Settings 메뉴얼 전체 코드 및 설정 방법 포함',
+      '문서 상태 직접 변경: 수정 화면에서 상태(접수대기·배정완료·처리중·완료) 변경 가능',
+    ]
+  },
   {
     version: '1.6.0',
     date: '2026.05.06',
