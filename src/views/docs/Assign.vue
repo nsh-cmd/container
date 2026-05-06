@@ -1,6 +1,6 @@
 <template>
-  <div class="p-8 pb-20 max-w-5xl mx-auto">
-    <header class="mb-8">
+  <div class="p-4 md:p-8 pb-20 max-w-5xl mx-auto">
+    <header class="mb-6 md:mb-8">
       <h1 class="text-2xl font-bold text-gray-900">문서 배정</h1>
       <p class="text-sm text-gray-500 mt-1">접수된 문서를 검토할 담당자를 지정하세요.</p>
     </header>

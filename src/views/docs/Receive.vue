@@ -1,13 +1,13 @@
 <template>
-  <div class="p-8 pb-20 max-w-4xl mx-auto">
-    <header class="mb-8">
+  <div class="p-4 md:p-8 pb-20 max-w-4xl mx-auto">
+    <header class="mb-6 md:mb-8">
       <h1 class="text-2xl font-bold text-gray-900">새 공문 접수</h1>
       <p class="text-sm text-gray-500 mt-1">외부에서 발송된 형태의 공문을 수신하고 분배 대기열로 등록합니다.</p>
     </header>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-8">
       <form @submit.prevent="submitDoc" class="space-y-6">
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
           <div>
             <label class="text-xs font-semibold text-gray-600 block mb-1">발신 기관명 <span class="text-red-500">*</span></label>
             <input v-model="form.senderOrg" required class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="예: 여수시청">

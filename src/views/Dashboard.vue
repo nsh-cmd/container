@@ -1,6 +1,6 @@
 <template>
-  <div class="p-8">
-    <header class="mb-8">
+  <div class="p-4 md:p-8 pb-20">
+    <header class="mb-6 md:mb-8">
       <h1 class="text-2xl font-bold text-gray-900">대시보드</h1>
       <p class="text-sm text-gray-500 mt-1">오늘의 공문서 현황을 확인하세요.</p>
     </header>
@@ -29,12 +29,47 @@
         </div>
       </div>
       
-      <div class="mt-8 bg-white rounded-3xl border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-7 w-full overflow-hidden">
-        <h2 class="text-[16px] font-bold text-slate-800 mb-5 flex items-center gap-2">
+      <div class="mt-6 md:mt-8 bg-white rounded-3xl border border-slate-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] p-5 md:p-7 w-full overflow-hidden">
+        <h2 class="text-[16px] font-bold text-slate-800 mb-4 md:mb-5 flex items-center gap-2">
           <span class="w-1.5 h-4 bg-indigo-500 rounded-full"></span>최근 등록된 문서
         </h2>
-        
-        <div class="overflow-x-auto -mx-7 px-7">
+
+        <!-- 모바일 카드뷰 -->
+        <div class="md:hidden divide-y divide-slate-50">
+          <div v-if="recentDocs.length === 0" class="py-10 text-center text-slate-400 text-[13px]">최근 등록된 문서가 없습니다.</div>
+          <div v-for="d in recentDocs" :key="d.id" @click="goToSearch(d)" class="px-1 py-4 active:bg-slate-50 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{{ d.receiptNo }}</span>
+              <span class="px-2 py-0.5 text-[11px] font-bold rounded-md" :class="{
+                'bg-slate-100 text-slate-600': d.status === '접수대기',
+                'bg-amber-100 text-amber-700': d.status === '배정완료',
+                'bg-indigo-100 text-indigo-700': d.status === '처리중' || d.status === '검토중',
+                'bg-emerald-100 text-emerald-700': d.status === '완료'
+              }">{{ d.status }}</span>
+            </div>
+            <p class="text-[14px] font-bold text-slate-800 mb-1 leading-snug line-clamp-1">{{ d.title }}</p>
+            <div class="text-[12px] text-slate-500 mb-1">
+              {{ d.senderOrg || '-' }}<span v-if="d.senderDocNo" class="font-mono text-slate-400 ml-1 text-[11px]"> · {{ d.senderDocNo }}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-x-2 text-[12px] text-slate-500 mb-2">
+              <span>{{ d.categoryName || '-' }}</span>
+              <span class="text-slate-300">·</span>
+              <span>담당: <span class="font-semibold text-slate-700">{{ d.assigneeName || '미배정' }}</span></span>
+              <span v-if="d.assigneeName" class="text-slate-300">·</span>
+              <span v-if="d.assigneeName" class="text-[11px]" :class="d.assigneeReadAt ? 'text-emerald-500' : 'text-slate-400'">{{ d.assigneeReadAt ? '읽음' : '미확인' }}</span>
+            </div>
+            <div v-if="d.reviewSteps && d.reviewSteps.length > 0" class="flex flex-wrap gap-1.5">
+              <span v-for="(step, idx) in d.reviewSteps" :key="idx"
+                    class="px-1.5 py-0.5 text-[10px] rounded-md border font-medium"
+                    :class="isAutoSkipped(step) ? 'bg-amber-50 text-amber-700 border-amber-200' : (step.isApproved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : (step.isRead ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-200'))">
+                {{ stepTitle(step) }}{{ step.name ? '(' + step.name.replace(/ *\(자동생략\)/, '') + ')' : '' }}{{ isAutoSkipped(step) ? ' 생략' : (step.isApproved ? '✓' : '') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 데스크톱 테이블 -->
+        <div class="hidden md:block overflow-x-auto -mx-7 px-7">
           <table class="w-full text-left whitespace-nowrap">
             <thead>
               <tr class="text-[12px] text-slate-400 border-b border-slate-100 uppercase tracking-wider">
