@@ -139,6 +139,27 @@
 
     <!-- 문서 상세 모달 -->
     <DocDetailModal :show="showModal" :docData="selectedDoc" @close="showModal = false" @updated="doSearch" @deleted="showModal = false; doSearch()" />
+
+    <!-- 커스텀 다이얼로그 -->
+    <div v-if="dialog.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                 :class="dialog.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'">
+              <svg v-if="dialog.type === 'error'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <svg v-else class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">{{ dialog.title }}</h3>
+          </div>
+          <p class="text-sm text-slate-600 mb-6 leading-relaxed whitespace-pre-line">{{ dialog.message }}</p>
+          <div class="flex justify-end">
+            <button @click="dialog.onConfirm" class="px-4 py-2 text-white text-sm font-semibold rounded-xl transition shadow-sm"
+                    :class="dialog.type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'">확인</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -157,6 +178,15 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const hasSearched = ref(false)
 const results = ref([])
+
+// ── 커스텀 다이얼로그 ──
+const dialog = ref({ show: false, title: '', message: '', type: 'info', isConfirm: false, onConfirm: () => {}, onCancel: () => {} })
+const showAlert = (title, message, type = 'info') => new Promise((resolve) => {
+  dialog.value = { show: true, title, message, type, isConfirm: false,
+    onConfirm: () => { dialog.value.show = false; resolve() },
+    onCancel: () => { dialog.value.show = false; resolve() }
+  }
+})
 
 const filters = ref({
   keyword: '',
@@ -227,7 +257,7 @@ const doSearch = async () => {
     results.value = fetched
   } catch (err) {
     console.error(err)
-    alert('검색 중 오류가 발생했습니다. 권한 또는 네트워크를 확인하세요.')
+    await showAlert('검색 오류', '검색 중 오류가 발생했습니다.\n권한 또는 네트워크를 확인하세요.', 'error')
   } finally {
     loading.value = false
   }

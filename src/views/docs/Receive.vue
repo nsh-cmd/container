@@ -121,6 +121,29 @@
         </button>
       </form>
     </div>
+
+    <!-- 커스텀 다이얼로그 -->
+    <div v-if="dialog.show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                 :class="dialog.type === 'error' ? 'bg-red-100 text-red-600' : (dialog.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600')">
+              <svg v-if="dialog.type === 'error'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <svg v-else-if="dialog.type === 'success'" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <svg v-else class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">{{ dialog.title }}</h3>
+          </div>
+          <p class="text-sm text-slate-600 mb-6 leading-relaxed whitespace-pre-line">{{ dialog.message }}</p>
+          <div class="flex justify-end gap-2">
+            <button v-if="dialog.isConfirm" @click="dialog.onCancel" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition">취소</button>
+            <button @click="dialog.onConfirm" class="px-4 py-2 text-white text-sm font-semibold rounded-xl transition shadow-sm"
+                    :class="dialog.type === 'error' ? 'bg-red-600 hover:bg-red-700' : (dialog.type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700')">확인</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -141,6 +164,21 @@ const loading = ref(false)
 const categories = ref([])
 const reviewSteps = ref([])
 const users = ref([])
+
+// ── 커스텀 다이얼로그 ──
+const dialog = ref({ show: false, title: '', message: '', type: 'info', isConfirm: false, onConfirm: () => {}, onCancel: () => {} })
+const showAlert = (title, message, type = 'info') => new Promise((resolve) => {
+  dialog.value = { show: true, title, message, type, isConfirm: false,
+    onConfirm: () => { dialog.value.show = false; resolve() },
+    onCancel: () => { dialog.value.show = false; resolve() }
+  }
+})
+const showConfirm = (title, message) => new Promise((resolve) => {
+  dialog.value = { show: true, title, message, type: 'info', isConfirm: true,
+    onConfirm: () => { dialog.value.show = false; resolve(true) },
+    onCancel: () => { dialog.value.show = false; resolve(false) }
+  }
+})
 
 // 첨부파일 관련
 const attachedFiles = ref([])
@@ -191,7 +229,7 @@ const handleDrop = (e) => {
 const addFiles = (files) => {
   for (const file of files) {
     if (file.size > MAX_FILE_SIZE) {
-      alert(`"${file.name}" 파일이 10MB를 초과합니다. (${formatFileSize(file.size)})`)
+      await showAlert('파일 크기 초과', `"${file.name}" 파일이 10MB를 초과합니다.\n(${formatFileSize(file.size)})`, 'error')
       continue
     }
     if (attachedFiles.value.some(f => f.name === file.name && f.size === file.size)) {
@@ -355,10 +393,10 @@ const submitDoc = async () => {
     const fileMsg = attachedFiles.value.length > 0
       ? `\n첨부파일 ${attachedFiles.value.length}개 ${settingsStore.appsScriptUrl ? '업로드됨' : '(Drive 미연동 — 메타만 기록)'}`
       : ''
-    alert(`정상 접수되었습니다. [${receiptNo}]${fileMsg}`)
+    await showAlert('접수 완료', `정상 접수되었습니다. [${receiptNo}]${fileMsg}`, 'success')
     router.push('/assign')
   } catch (err) {
-    alert(`접수 중 오류가 발생했습니다.\n${err.message || ''}`)
+    await showAlert('접수 오류', `접수 중 오류가 발생했습니다.\n${err.message || ''}`, 'error')
   } finally {
     loading.value = false
     uploadProgress.value = ''
