@@ -226,7 +226,7 @@ const handleDrop = (e) => {
   addFiles(Array.from(e.dataTransfer.files))
 }
 
-const addFiles = (files) => {
+const addFiles = async (files) => {
   for (const file of files) {
     if (file.size > MAX_FILE_SIZE) {
       await showAlert('파일 크기 초과', `"${file.name}" 파일이 10MB를 초과합니다.\n(${formatFileSize(file.size)})`, 'error')
