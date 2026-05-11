@@ -193,9 +193,9 @@ import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'firebase
 const users = ref([])
 const loading = ref(true)
 
-// 승인 대기 사용자 (pending 역할이거나 active=false인 사용자)
+// 승인 대기 사용자 (자가 가입 신청 — role === 'pending'만)
 const pendingUsers = computed(() =>
-  users.value.filter(u => u.role === 'pending' || !u.active)
+  users.value.filter(u => u.role === 'pending')
 )
 // 승인 대기 사용자별 선택 역할 (userId → role)
 const pendingRoles = ref({})
