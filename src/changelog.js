@@ -1,7 +1,18 @@
-export const APP_VERSION = '1.9.3'
-export const APP_VERSION_DATE = '2026.05.06'
+export const APP_VERSION = '1.10.0'
+export const APP_VERSION_DATE = '2026.05.11'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.0',
+    date: '2026.05.11',
+    changes: [
+      '직원 셀프 가입 기능: 로그인 화면에서 직접 가입 신청 (이름·이메일·비밀번호·부서)',
+      '관리자 승인 흐름: 가입 신청자는 pending 상태로 대기, 관리자가 역할 지정 후 승인/거부',
+      '승인 대기 화면: 미승인 사용자 로그인 시 /pending 안내 화면으로 격리 (다른 페이지 접근 차단)',
+      '사용자 관리 승인 섹션: Users.vue 상단에 승인 대기 목록 표시, 역할 선택 후 클릭 한 번으로 승인·거부',
+      'Firestore 규칙 강화: 자가 가입은 role=pending, active=false 강제 — 자가 승격 불가',
+    ]
+  },
   {
     version: '1.9.3',
     date: '2026.05.06',

@@ -43,6 +43,13 @@ authStore.init().then(async () => {
       return next('/')
     }
 
+    // 5. 로그인했지만 미승인(pending) 사용자 → /pending 격리
+    const isPending = isLoggedIn && (
+      !authStore.profile?.active || authStore.profile?.role === 'pending'
+    )
+    if (isPending && to.path !== '/pending') return next('/pending')
+    if (!isPending && to.path === '/pending') return next('/')
+
     next()
   })
 

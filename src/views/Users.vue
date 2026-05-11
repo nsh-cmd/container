@@ -10,6 +10,33 @@
       </button>
     </header>
 
+    <!-- 승인 대기 섹션 -->
+    <div v-if="pendingUsers.length > 0" class="bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden mb-6">
+      <div class="px-6 py-4 border-b border-amber-200 flex items-center gap-2">
+        <span class="text-amber-700 font-bold text-sm">🔔 승인 대기 ({{ pendingUsers.length }})</span>
+        <span class="text-xs text-amber-600">가입 신청한 직원을 역할 지정 후 승인하세요.</span>
+      </div>
+      <div class="divide-y divide-amber-100">
+        <div v-for="u in pendingUsers" :key="u.id" class="px-6 py-4 flex flex-col md:flex-row md:items-center gap-3">
+          <div class="flex-1">
+            <p class="text-sm font-bold text-gray-800">{{ u.name }}</p>
+            <p class="text-xs text-gray-500">{{ u.email }}<span v-if="u.department"> · {{ u.department }}</span></p>
+            <p class="text-[11px] text-amber-600 mt-0.5">신청일: {{ u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString('ko-KR') : '-' }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select v-model="pendingRoles[u.id]" class="border border-amber-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white">
+              <option value="user">담당자</option>
+              <option value="receiver">접수자</option>
+              <option value="reviewer">검토자</option>
+              <option value="admin">관리자</option>
+            </select>
+            <button @click="approveUser(u)" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition whitespace-nowrap">✅ 승인</button>
+            <button @click="rejectUser(u)" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-200 transition whitespace-nowrap">❌ 거부</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 사용자 리스트 -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div v-if="loading" class="p-8 text-center text-gray-400">불러오는 중...</div>
@@ -159,12 +186,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { db } from '../firebase/config'
-import { collection, getDocs, doc, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore'
 
 const users = ref([])
 const loading = ref(true)
+
+// 승인 대기 사용자 (pending 역할이거나 active=false인 사용자)
+const pendingUsers = computed(() =>
+  users.value.filter(u => u.role === 'pending' || !u.active)
+)
+// 승인 대기 사용자별 선택 역할 (userId → role)
+const pendingRoles = ref({})
 const showAddModal = ref(false)
 const submitting = ref(false)
 
@@ -201,10 +235,39 @@ const loadUsers = async () => {
   try {
     const snap = await getDocs(collection(db, 'users'))
     users.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    // 승인 대기 사용자 역할 초기값 설정
+    users.value.filter(u => u.role === 'pending' || !u.active).forEach(u => {
+      if (!pendingRoles.value[u.id]) pendingRoles.value[u.id] = 'user'
+    })
   } catch(e) {
     console.error(e)
   } finally {
     loading.value = false
+  }
+}
+
+const approveUser = async (u) => {
+  const role = pendingRoles.value[u.id] || 'user'
+  const confirmed = await showConfirm('가입 승인', `${u.name}(${u.email})을 [${roleLabels[role]}] 역할로 승인하시겠습니까?`)
+  if (!confirmed) return
+  try {
+    await updateDoc(doc(db, 'users', u.id), { role, active: true })
+    await loadUsers()
+    await showAlert('승인 완료', `${u.name} 계정이 승인되었습니다.`, 'success')
+  } catch(e) {
+    await showAlert('오류', '승인 처리 중 오류가 발생했습니다.', 'error')
+  }
+}
+
+const rejectUser = async (u) => {
+  const confirmed = await showConfirm('가입 거부', `${u.name}(${u.email})의 가입 신청을 거부하시겠습니까?\n\n거부 시 사용자 정보가 삭제됩니다.`)
+  if (!confirmed) return
+  try {
+    await deleteDoc(doc(db, 'users', u.id))
+    delete pendingRoles.value[u.id]
+    await loadUsers()
+  } catch(e) {
+    await showAlert('오류', '거부 처리 중 오류가 발생했습니다.', 'error')
   }
 }
 

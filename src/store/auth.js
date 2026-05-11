@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { auth, db } from '../firebase/config'
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 // 관리자 계정은 Firebase Console에서 직접 생성하고,
@@ -65,6 +65,18 @@ export const useAuthStore = defineStore('auth', {
         await setDoc(doc(db, 'users', res.user.uid), adminProfile)
         this.profile = adminProfile
       }
+    },
+    async register({ email, password, name, department }) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password)
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        email,
+        name,
+        department: department || '',
+        role: 'pending',
+        active: false,
+        createdAt: new Date()
+      })
+      await signOut(auth) // 승인 전까지 자동 로그인 방지
     },
     async logout() {
       await signOut(auth)

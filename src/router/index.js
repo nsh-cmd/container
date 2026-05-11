@@ -11,10 +11,12 @@ import Register from '../views/docs/Register.vue'
 import Search from '../views/Search.vue'
 import SetupWizard from '../views/SetupWizard.vue'
 import PatchNotes from '../views/PatchNotes.vue'
+import PendingApproval from '../views/PendingApproval.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/setup', name: 'Setup', component: SetupWizard },
+  { path: '/pending', name: 'PendingApproval', component: PendingApproval, meta: { requiresAuth: true } },
   {
     path: '/',
     component: MainLayout,
