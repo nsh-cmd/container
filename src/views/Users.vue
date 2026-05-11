@@ -64,9 +64,12 @@
                 <span class="px-2 py-0.5 text-[11px] font-semibold rounded-lg" :class="roleClasses[user.role]">{{ roleLabels[user.role] }}</span>
                 <span v-if="user.department" class="text-[12px] text-slate-500">{{ user.department }}</span>
               </div>
-              <button @click="toggleActive(user)" class="text-[12px] font-semibold text-slate-500 hover:text-slate-900 transition underline underline-offset-2">
-                {{ user.active ? '비활성화' : '활성화' }}
-              </button>
+              <div class="flex items-center gap-3">
+                <button @click="toggleActive(user)" class="text-[12px] font-semibold text-slate-500 hover:text-slate-900 transition underline underline-offset-2">
+                  {{ user.active ? '비활성화' : '활성화' }}
+                </button>
+                <button @click="deleteUser(user)" class="text-[12px] font-semibold text-red-400 hover:text-red-600 transition underline underline-offset-2">삭제</button>
+              </div>
             </div>
           </div>
         </div>
@@ -99,9 +102,12 @@
                 </span>
               </td>
               <td class="px-6 py-4">
-                <button @click="toggleActive(user)" class="text-xs font-semibold text-gray-500 hover:text-gray-900 transition underline underline-offset-2">
-                  {{ user.active ? '비활성화' : '활성화' }}
-                </button>
+                <div class="flex items-center gap-3">
+                  <button @click="toggleActive(user)" class="text-xs font-semibold text-gray-500 hover:text-gray-900 transition underline underline-offset-2">
+                    {{ user.active ? '비활성화' : '활성화' }}
+                  </button>
+                  <button @click="deleteUser(user)" class="text-xs font-semibold text-red-400 hover:text-red-600 transition underline underline-offset-2">삭제</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -301,6 +307,17 @@ const addUser = async () => {
     errorMsg.value = e.message
   } finally {
     submitting.value = false
+  }
+}
+
+const deleteUser = async (user) => {
+  const confirmed = await showConfirm('계정 삭제', `${user.name}(${user.email}) 계정을 삭제하시겠습니까?\n\n삭제 후 복구할 수 없습니다.`)
+  if (!confirmed) return
+  try {
+    await deleteDoc(doc(db, 'users', user.id))
+    await loadUsers()
+  } catch(e) {
+    await showAlert('오류', '삭제 중 오류가 발생했습니다.', 'error')
   }
 }
 
