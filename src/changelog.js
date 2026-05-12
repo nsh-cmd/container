@@ -1,7 +1,16 @@
-export const APP_VERSION = '1.10.0'
-export const APP_VERSION_DATE = '2026.05.11'
+export const APP_VERSION = '1.10.1'
+export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.1',
+    date: '2026.05.12',
+    changes: [
+      '담당자=검토자 동기화 수정: 검토 승인 시 assigneeReadAt 동시 업데이트',
+      '기존 문서 소급 처리: 문서 상세 열 때 이미 승인된 검토자=담당자는 자동으로 확인 처리',
+      '반응성 보장: Object.assign + emit(updated)로 목록 카드도 즉시 갱신',
+    ]
+  },
   {
     version: '1.10.0',
     date: '2026.05.11',
