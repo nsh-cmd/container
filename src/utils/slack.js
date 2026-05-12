@@ -32,10 +32,15 @@ export const getSlackMention = (email, name, memberMap) => {
 /**
  * Slack 워크스페이스 전체 사용자 조회
  * Bot Token Scopes 필요: users:read, users:read.email
+ *
+ * Authorization 헤더는 브라우저 CORS preflight에서 차단되므로
+ * token을 application/x-www-form-urlencoded 바디로 전송 (CORS safe)
  */
 export const fetchSlackWorkspaceUsers = async (botToken) => {
   const res = await fetch('https://slack.com/api/users.list', {
-    headers: { Authorization: `Bearer ${botToken}` }
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `token=${encodeURIComponent(botToken)}`
   })
   const data = await res.json()
   if (!data.ok) throw new Error(data.error || 'Slack API 오류')
