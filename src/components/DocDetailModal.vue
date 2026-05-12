@@ -118,6 +118,21 @@
               <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>결재 검토 흐름
             </h4>
             <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-3">
+              <!-- 담당자 전달 의견 표시 -->
+              <div v-if="docData.assigneeComment" class="flex items-start gap-1.5 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
+                <span class="text-indigo-400 text-xs mt-0.5">📝</span>
+                <div>
+                  <p class="text-[10px] text-indigo-400 font-semibold mb-0.5">담당자 전달 의견</p>
+                  <p class="text-xs text-indigo-700 leading-relaxed">{{ docData.assigneeComment }}</p>
+                </div>
+              </div>
+              <!-- 담당자 코멘트 입력창 (검토 요청 전) -->
+              <div v-if="canRequestReview">
+                <p class="text-[10px] text-slate-500 font-semibold mb-1">검토자에게 전달할 의견 (선택)</p>
+                <textarea v-model="reviewComment" rows="2"
+                  class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white"
+                  placeholder="1차 검토자에게 전달할 내용을 입력하세요"></textarea>
+              </div>
               <div v-for="step in docData.reviewSteps" :key="step.level" class="space-y-2">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-3">
@@ -701,8 +716,10 @@ const requestReview = async () => {
   isProcessing.value = true
   try {
     const updates = { status: '처리중', reviewRequestedAt: new Date() }
+    if (reviewComment.value.trim()) updates.assigneeComment = reviewComment.value.trim()
     await updateDoc(doc(db, 'documents', props.docData.id), updates)
     Object.assign(props.docData, updates)
+    reviewComment.value = ''
     emit('updated')
     await showAlert('요청 완료', '성공적으로 검토 요청이 전송되었습니다.')
   } catch (e) {

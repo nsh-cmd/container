@@ -1,7 +1,15 @@
-export const APP_VERSION = '1.10.2'
+export const APP_VERSION = '1.10.3'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.3',
+    date: '2026.05.12',
+    changes: [
+      '담당자 검토 요청 시 코멘트 입력 기능 추가 (1차 검토자에게 전달)',
+      '담당자 전달 의견은 결재 검토 흐름 상단에 별도 표시 (📝 파란 박스)',
+    ]
+  },
   {
     version: '1.10.2',
     date: '2026.05.12',
