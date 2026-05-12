@@ -1,7 +1,15 @@
-export const APP_VERSION = '1.10.7'
+export const APP_VERSION = '1.10.8'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.8',
+    date: '2026.05.12',
+    changes: [
+      '문서 수정 시 담당자 변경 기능 추가: 편집 모드에서 담당자 드롭다운으로 바로 변경 가능',
+      '담당자 변경 시 assigneeReadAt 자동 초기화 (새 담당자 미확인 상태로 전환)',
+    ]
+  },
   {
     version: '1.10.7',
     date: '2026.05.12',

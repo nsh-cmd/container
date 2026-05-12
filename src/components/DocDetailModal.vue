@@ -168,16 +168,25 @@
 
         <!-- ───────── 편집 모드 ───────── -->
         <template v-else>
-          <!-- 진행 상태 -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600 block mb-1">진행 상태</label>
-            <select v-model="editForm.status" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-              <option value="접수대기">접수대기</option>
-              <option value="배정완료">배정완료</option>
-              <option value="처리중">처리중</option>
-              <option value="검토중">검토중</option>
-              <option value="완료">완료</option>
-            </select>
+          <!-- 진행 상태 + 담당자 변경 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-gray-600 block mb-1">진행 상태</label>
+              <select v-model="editForm.status" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                <option value="접수대기">접수대기</option>
+                <option value="배정완료">배정완료</option>
+                <option value="처리중">처리중</option>
+                <option value="검토중">검토중</option>
+                <option value="완료">완료</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-600 block mb-1">담당자 변경</label>
+              <select v-model="editForm.assigneeEmail" @change="onAssigneeChange" class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                <option value="">미배정</option>
+                <option v-for="u in editableUsers" :key="u.email" :value="u.email">{{ u.name }} ({{ u.department || u.email }})</option>
+              </select>
+            </div>
           </div>
 
           <!-- 문서 제목 -->
@@ -366,7 +375,7 @@ import { useAuthStore } from '../store/auth'
 import { useSettingsStore } from '../store/settings'
 import { sendSlackMessage, getSlackMention, getAppLink } from '../utils/slack'
 import { db } from '../firebase/config'
-import { doc, updateDoc, deleteDoc as firestoreDeleteDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, deleteDoc as firestoreDeleteDoc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
 import { isAutoSkipped } from '../utils/docUtils'
 
 const authStore = useAuthStore()
@@ -400,6 +409,7 @@ const isDeleting = ref(false)
 const isDragOver = ref(false)
 const editForm = ref({})
 const categories = ref([])
+const editableUsers = ref([])
 const newFiles = ref([])
 const removedAttachmentIndices = ref([])
 const editFileInput = ref(null)
@@ -442,8 +452,20 @@ const loadCategories = async () => {
   } catch (e) {}
 }
 
+const loadEditableUsers = async () => {
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['user', 'reviewer', 'admin']), where('active', '==', true)))
+    editableUsers.value = snap.docs.map(d => d.data()).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'))
+  } catch (e) {}
+}
+
+const onAssigneeChange = () => {
+  const user = editableUsers.value.find(u => u.email === editForm.value.assigneeEmail)
+  editForm.value.assigneeName = user ? user.name : ''
+}
+
 const startEditing = async () => {
-  await loadCategories()
+  await Promise.all([loadCategories(), loadEditableUsers()])
   const d = props.docData
   editForm.value = {
     title: d.title || '',
@@ -454,7 +476,9 @@ const startEditing = async () => {
     note: d.note || '',
     category: d.category || '',
     categoryName: d.categoryName || '',
-    status: d.status || ''
+    status: d.status || '',
+    assigneeEmail: d.assigneeEmail || '',
+    assigneeName: d.assigneeName || ''
   }
   newFiles.value = []
   removedAttachmentIndices.value = []
@@ -593,10 +617,16 @@ const saveEdit = async () => {
       category: editForm.value.category,
       categoryName: editForm.value.categoryName,
       status: editForm.value.status,
+      assigneeEmail: editForm.value.assigneeEmail || null,
+      assigneeName: editForm.value.assigneeName || null,
       attachments: finalAttachments,
       attachmentCount: finalAttachments.length,
       updatedAt: new Date(),
       updatedBy: authStore.user.email
+    }
+    // 담당자 변경 시 assigneeReadAt 초기화 (새 담당자가 아직 읽지 않은 것으로)
+    if (editForm.value.assigneeEmail !== props.docData.assigneeEmail) {
+      updates.assigneeReadAt = null
     }
 
     await updateDoc(doc(db, 'documents', props.docData.id), updates)
