@@ -1,7 +1,16 @@
-export const APP_VERSION = '1.10.6'
+export const APP_VERSION = '1.10.7'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.7',
+    date: '2026.05.12',
+    changes: [
+      '문서접수대장 권한 분기: 관리자·접수자는 전체 조회, 일반 사용자는 본인 담당 문서만 조회·인쇄',
+      '일반 사용자 접수대장에 "내 담당 문서만 조회됩니다" 안내 표시',
+      '인쇄 헤더에 담당자 이름 표시 (일반 사용자 한정)',
+    ]
+  },
   {
     version: '1.10.6',
     date: '2026.05.12',

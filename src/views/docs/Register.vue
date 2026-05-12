@@ -3,6 +3,9 @@
     <header class="mb-8 print:hidden">
       <h1 class="text-2xl font-bold text-gray-900">📋 문서접수대장</h1>
       <p class="text-sm text-gray-500 mt-1">기간, 제목, 검토 단계 등으로 조회하고 대장을 출력할 수 있습니다.</p>
+      <p v-if="!isAdminOrReceiver" class="mt-2 text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-1.5 inline-block">
+        📌 내 담당 문서만 조회됩니다.
+      </p>
     </header>
 
     <!-- 검색 필터 영역 (인쇄 시 숨김) -->
@@ -72,7 +75,7 @@
       <!-- 인쇄 헤더 (화면에서는 숨김) -->
       <div class="hidden print:block text-center print:mb-1">
         <h2 class="text-[22px] font-bold tracking-widest print:text-[22px] print:tracking-[0.25em]">문 서 접 수 대 장</h2>
-        <p class="text-[9px] text-gray-500 print:text-[5.5px] print:mt-0">{{ printDateRange }} · {{ settingsStore.orgName || '공문서 관리 시스템' }} · 출력일: {{ today }}</p>
+        <p class="text-[9px] text-gray-500 print:text-[5.5px] print:mt-0">{{ printDateRange }} · {{ settingsStore.orgName || '공문서 관리 시스템' }}<span v-if="!isAdminOrReceiver"> · 담당자: {{ authStore.profile?.name }}</span> · 출력일: {{ today }}</p>
       </div>
 
       <!-- 결과 상단 바 (인쇄 시 숨김) -->
@@ -259,11 +262,17 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { db } from '../../firebase/config'
-import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore'
+import { collection, query, getDocs, orderBy, limit, where, doc, getDoc } from 'firebase/firestore'
 import { useSettingsStore } from '../../store/settings'
+import { useAuthStore } from '../../store/auth'
 import { isAutoSkipped } from '../../utils/docUtils'
 
 const settingsStore = useSettingsStore()
+const authStore = useAuthStore()
+
+const isAdminOrReceiver = computed(() =>
+  ['admin', 'receiver'].includes(authStore.profile?.role)
+)
 
 const loading = ref(false)
 const hasSearched = ref(false)
@@ -331,7 +340,10 @@ const doSearch = async () => {
   loading.value = true
   hasSearched.value = true
   try {
-    const q = query(collection(db, 'documents'), orderBy('createdAt', 'desc'), limit(500))
+    // 관리자·접수자: 전체 조회 / 일반 사용자: 본인 담당 문서만
+    const q = isAdminOrReceiver.value
+      ? query(collection(db, 'documents'), orderBy('createdAt', 'desc'), limit(500))
+      : query(collection(db, 'documents'), where('assigneeEmail', '==', authStore.user.email), orderBy('createdAt', 'desc'), limit(500))
     const snap = await getDocs(q)
 
     let fetched = snap.docs.map(d => ({
