@@ -559,17 +559,6 @@ function handleFileUpload(data) {
   const file = targetFolder.createFile(blob);
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
-  const slackUrl = getConfig('SLACK_WEBHOOK_URL');
-  if (slackUrl && data.receiptNo) {
-    const orgName = getConfig('ORG_NAME') || '공문서 관리';
-    sendSlack(slackUrl,
-      ':file_folder: *[' + orgName + '] 첨부파일 업로드*\\n' +
-      '> 문서번호: ' + data.receiptNo + '\\n' +
-      '> 파일명: ' + fileName + '\\n' +
-      '> <' + file.getUrl() + '|Drive에서 보기>'
-    );
-  }
-
   return {
     success: true,
     fileId:   file.getId(),

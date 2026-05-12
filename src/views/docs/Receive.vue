@@ -155,6 +155,7 @@ import { collection, doc, getDoc, setDoc, query, where, getDocs } from 'firebase
 import { useAuthStore } from '../../store/auth'
 import { useSettingsStore } from '../../store/settings'
 import { applyAutoSkip, generateReceiptNo, extractReviewerEmails } from '../../utils/docUtils'
+import { getAppLink } from '../../utils/slack'
 
 const authStore = useAuthStore()
 const settingsStore = useSettingsStore()
@@ -388,6 +389,7 @@ const submitDoc = async () => {
           ? attachedFiles.value.map((f, i) => `  ${i + 1}. ${f.name}`).join('\n')
           : '첨부파일 없음'
         text = text.replace(/{attachments}/g, attachmentText)
+        text += getAppLink()
         await fetch(settingsStore.slackWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), mode: 'no-cors' })
       } catch (e) { /* Slack 오류는 무시 */ }
     }

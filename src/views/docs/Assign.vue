@@ -76,6 +76,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 import DocDetailModal from '../../components/DocDetailModal.vue'
 import { useSettingsStore } from '../../store/settings'
 import { applyAutoSkip, extractReviewerEmails } from '../../utils/docUtils'
+import { getAppLink } from '../../utils/slack'
 
 const loading = ref(true)
 const docs = ref([])
@@ -165,6 +166,7 @@ const assignDoc = async (docItem) => {
           ? docItem.attachments.map((f, i) => `  ${i + 1}. ${f.name}`).join('\n')
           : '첨부파일 없음'
         text = text.replace(/{attachments}/g, attachmentText)
+        text += getAppLink()
         await fetch(settingsStore.slackWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), mode: 'no-cors' })
       } catch (e) { /* Slack 오류는 무시 */ }
     }

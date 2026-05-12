@@ -18,6 +18,14 @@ export const sendSlackMessage = async (webhookUrl, text) => {
 }
 
 /**
+ * 현재 앱 URL을 슬랙 클릭 가능 링크로 반환
+ */
+export const getAppLink = () => {
+  const url = window.location.origin
+  return `\n\n<${url}|📱 앱에서 확인하기>`
+}
+
+/**
  * 이메일 기반 슬랙 멘션 문자열 반환
  * - memberMap에 해당 이메일이 있으면 <@SLACKID> 형태 (실제 ping)
  * - 없으면 @이름 형태 (텍스트)

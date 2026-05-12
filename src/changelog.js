@@ -1,7 +1,15 @@
-export const APP_VERSION = '1.10.5'
+export const APP_VERSION = '1.10.6'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.6',
+    date: '2026.05.12',
+    changes: [
+      'Slack 알림 하단 앱 바로가기 링크 추가 (접수·배정·검토요청·승인·완료 전 알림)',
+      'Apps Script 파일 업로드 시 개별 Slack 알림 제거 (중복 알림 방지)',
+    ]
+  },
   {
     version: '1.10.5',
     date: '2026.05.12',

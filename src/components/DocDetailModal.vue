@@ -364,7 +364,7 @@
 import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useSettingsStore } from '../store/settings'
-import { sendSlackMessage, getSlackMention } from '../utils/slack'
+import { sendSlackMessage, getSlackMention, getAppLink } from '../utils/slack'
 import { db } from '../firebase/config'
 import { doc, updateDoc, deleteDoc as firestoreDeleteDoc, getDoc } from 'firebase/firestore'
 import { isAutoSkipped } from '../utils/docUtils'
@@ -728,7 +728,7 @@ const requestReview = async () => {
       if (firstStep?.email) {
         const mention = getSlackMention(firstStep.email, firstStep.name, settingsStore.slackMemberMap)
         sendSlackMessage(settingsStore.slackWebhookUrl,
-          `${mention} 📋 *[${props.docData.receiptNo}] ${props.docData.title}* 문서 검토를 요청드립니다.`)
+          `${mention} 📋 *[${props.docData.receiptNo}] ${props.docData.title}* 문서 검토를 요청드립니다.${getAppLink()}`)
       }
     }
     await showAlert('요청 완료', '성공적으로 검토 요청이 전송되었습니다.')
@@ -787,14 +787,14 @@ const approveReview = async (idx) => {
         // 최종 승인 → 담당자에게 완료 알림
         const mention = getSlackMention(props.docData.assigneeEmail, props.docData.assigneeName, settingsStore.slackMemberMap)
         sendSlackMessage(settingsStore.slackWebhookUrl,
-          `${mention} ✅ *[${receiptNo}] ${docTitle}* 문서의 모든 검토가 완료되었습니다.`)
+          `${mention} ✅ *[${receiptNo}] ${docTitle}* 문서의 모든 검토가 완료되었습니다.${getAppLink()}`)
       } else {
         // 다음 비생략 검토자에게 요청 알림
         const nextStep = reviewSteps.slice(idx + 1).find(s => !isAutoSkipped(s))
         if (nextStep?.email) {
           const mention = getSlackMention(nextStep.email, nextStep.name, settingsStore.slackMemberMap)
           sendSlackMessage(settingsStore.slackWebhookUrl,
-            `${mention} 📋 *[${receiptNo}] ${docTitle}* 문서 검토를 요청드립니다.`)
+            `${mention} 📋 *[${receiptNo}] ${docTitle}* 문서 검토를 요청드립니다.${getAppLink()}`)
         }
       }
     }
