@@ -65,6 +65,7 @@
                 <span v-if="user.department" class="text-[12px] text-slate-500">{{ user.department }}</span>
               </div>
               <div class="flex items-center gap-3">
+                <button @click="openEditModal(user)" class="text-[12px] font-semibold text-blue-500 hover:text-blue-700 transition underline underline-offset-2">수정</button>
                 <button @click="toggleActive(user)" class="text-[12px] font-semibold text-slate-500 hover:text-slate-900 transition underline underline-offset-2">
                   {{ user.active ? '비활성화' : '활성화' }}
                 </button>
@@ -103,6 +104,7 @@
               </td>
               <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
+                  <button @click="openEditModal(user)" class="text-xs font-semibold text-blue-500 hover:text-blue-700 transition underline underline-offset-2">수정</button>
                   <button @click="toggleActive(user)" class="text-xs font-semibold text-gray-500 hover:text-gray-900 transition underline underline-offset-2">
                     {{ user.active ? '비활성화' : '활성화' }}
                   </button>
@@ -137,6 +139,43 @@
                     :class="dialog.type === 'error' ? 'bg-red-600 hover:bg-red-700' : (dialog.type === 'success' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700')">확인</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 수정 모달 -->
+    <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h3 class="font-bold text-gray-800">직원 정보 수정</h3>
+          <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-600 transition">✕</button>
+        </div>
+        <form @submit.prevent="saveEdit" class="p-6 space-y-4">
+          <div>
+            <label class="text-xs font-semibold text-gray-600 block mb-1">이름 *</label>
+            <input v-model="editForm.name" required class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="홍길동">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-semibold text-gray-600 block mb-1">직급</label>
+              <input v-model="editForm.department" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="생활지도원">
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-gray-600 block mb-1">역할 *</label>
+              <select v-model="editForm.role" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="user">담당자</option>
+                <option value="receiver">접수자</option>
+                <option value="reviewer">검토자</option>
+                <option value="admin">관리자</option>
+              </select>
+            </div>
+          </div>
+          <div class="pt-2 flex gap-3">
+            <button type="button" @click="showEditModal = false" class="flex-1 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm font-semibold hover:bg-gray-50 transition">취소</button>
+            <button type="submit" class="flex-1 bg-blue-600 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-blue-700 transition shadow-sm" :disabled="editSubmitting">
+              {{ editSubmitting ? '저장 중...' : '저장하기' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -207,6 +246,33 @@ const pendingUsers = computed(() =>
 const pendingRoles = ref({})
 const showAddModal = ref(false)
 const submitting = ref(false)
+
+// 수정 모달
+const showEditModal = ref(false)
+const editSubmitting = ref(false)
+const editForm = ref({ id: '', name: '', department: '', role: 'user' })
+
+const openEditModal = (user) => {
+  editForm.value = { id: user.id, name: user.name, department: user.department || '', role: user.role }
+  showEditModal.value = true
+}
+
+const saveEdit = async () => {
+  editSubmitting.value = true
+  try {
+    await updateDoc(doc(db, 'users', editForm.value.id), {
+      name: editForm.value.name,
+      department: editForm.value.department,
+      role: editForm.value.role
+    })
+    showEditModal.value = false
+    await loadUsers()
+  } catch(e) {
+    await showAlert('오류', '수정 중 오류가 발생했습니다.', 'error')
+  } finally {
+    editSubmitting.value = false
+  }
+}
 
 // ── 커스텀 다이얼로그 ──
 const dialog = ref({ show: false, title: '', message: '', type: 'info', isConfirm: false, onConfirm: () => {}, onCancel: () => {} })
