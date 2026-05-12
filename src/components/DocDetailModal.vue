@@ -393,7 +393,8 @@ watch(() => props.show, async (val) => {
     try {
       const now = new Date()
       await updateDoc(doc(db, 'documents', props.docData.id), { assigneeReadAt: now })
-      props.docData.assigneeReadAt = now
+      Object.assign(props.docData, { assigneeReadAt: now })
+      emit('updated')
     } catch (e) {}
   }
 })
