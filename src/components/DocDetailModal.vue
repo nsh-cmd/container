@@ -374,11 +374,27 @@ const editFileInput = ref(null)
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
-watch(() => props.show, (val) => {
+watch(() => props.show, async (val) => {
   if (!val) {
     isEditing.value = false
     newFiles.value = []
     removedAttachmentIndices.value = []
+    return
+  }
+  // 모달 열릴 때: 담당자=검토자인 경우 기존 문서 assigneeReadAt 소급 처리
+  const userEmail = authStore.user?.email
+  if (
+    userEmail &&
+    userEmail === props.docData.assigneeEmail &&
+    !props.docData.assigneeReadAt &&
+    Array.isArray(props.docData.reviewSteps) &&
+    props.docData.reviewSteps.some(s => s.email === userEmail && s.isApproved)
+  ) {
+    try {
+      const now = new Date()
+      await updateDoc(doc(db, 'documents', props.docData.id), { assigneeReadAt: now })
+      props.docData.assigneeReadAt = now
+    } catch (e) {}
   }
 })
 
