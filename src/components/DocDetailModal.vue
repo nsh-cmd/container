@@ -364,6 +364,7 @@
 import { computed, ref, watch } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useSettingsStore } from '../store/settings'
+import { sendSlackMessage, getSlackMention } from '../utils/slack'
 import { db } from '../firebase/config'
 import { doc, updateDoc, deleteDoc as firestoreDeleteDoc, getDoc } from 'firebase/firestore'
 import { isAutoSkipped } from '../utils/docUtils'
@@ -721,6 +722,15 @@ const requestReview = async () => {
     Object.assign(props.docData, updates)
     reviewComment.value = ''
     emit('updated')
+    // Slack 알림 → 1차 검토자에게 검토 요청
+    if (settingsStore.slackWebhookUrl) {
+      const firstStep = (props.docData.reviewSteps || []).find(s => !isAutoSkipped(s))
+      if (firstStep?.email) {
+        const mention = getSlackMention(firstStep.email, firstStep.name, settingsStore.slackMemberMap)
+        sendSlackMessage(settingsStore.slackWebhookUrl,
+          `${mention} 📋 *[${props.docData.receiptNo}] ${props.docData.title}* 문서 검토를 요청드립니다.`)
+      }
+    }
     await showAlert('요청 완료', '성공적으로 검토 요청이 전송되었습니다.')
   } catch (e) {
     await showAlert('오류', '처리에 실패했습니다.', 'error')
@@ -768,6 +778,26 @@ const approveReview = async (idx) => {
     Object.assign(props.docData, updates)
     reviewComment.value = ''
     emit('updated')
+    // Slack 알림
+    if (settingsStore.slackWebhookUrl) {
+      const docTitle = props.docData.title
+      const receiptNo = props.docData.receiptNo
+      const isFinal = idx === reviewSteps.length - 1
+      if (isFinal) {
+        // 최종 승인 → 담당자에게 완료 알림
+        const mention = getSlackMention(props.docData.assigneeEmail, props.docData.assigneeName, settingsStore.slackMemberMap)
+        sendSlackMessage(settingsStore.slackWebhookUrl,
+          `${mention} ✅ *[${receiptNo}] ${docTitle}* 문서의 모든 검토가 완료되었습니다.`)
+      } else {
+        // 다음 비생략 검토자에게 요청 알림
+        const nextStep = reviewSteps.slice(idx + 1).find(s => !isAutoSkipped(s))
+        if (nextStep?.email) {
+          const mention = getSlackMention(nextStep.email, nextStep.name, settingsStore.slackMemberMap)
+          sendSlackMessage(settingsStore.slackWebhookUrl,
+            `${mention} 📋 *[${receiptNo}] ${docTitle}* 문서 검토를 요청드립니다.`)
+        }
+      }
+    }
     await showAlert('승인 완료', '정상적으로 검토 및 승인 처리되었습니다.')
   } catch (e) {
     await showAlert('승인 실패', '권한이 없거나 저장 중 문제가 발생했습니다.', 'error')

@@ -1,7 +1,17 @@
-export const APP_VERSION = '1.10.3'
+export const APP_VERSION = '1.10.4'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.4',
+    date: '2026.05.12',
+    changes: [
+      'Slack @멘션 자동 매칭: 봇 토큰으로 워크스페이스 사용자를 앱 계정과 이메일 기준 자동 매칭',
+      '검토 요청 시 Slack 알림: 1차 검토자에게 해당 문서 검토 요청 멘션 자동 발송',
+      '검토 승인 시 Slack 알림: 다음 검토자에게 순차 멘션, 최종 승인 후 담당자에게 완료 알림',
+      '설정 페이지: 슬랙 봇 토큰 입력 + 사용자 자동 매칭 버튼 추가',
+    ]
+  },
   {
     version: '1.10.3',
     date: '2026.05.12',

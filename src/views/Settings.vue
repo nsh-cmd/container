@@ -52,15 +52,31 @@
             📖 <span>{{ guideOpen.slack ? '매뉴얼 닫기' : '매뉴얼 보기' }}</span>
           </button>
         </div>
-        <div v-if="guideOpen.slack" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-2">
-          <p class="font-semibold">📋 Slack Webhook 설정 방법</p>
-          <ol class="list-decimal list-inside space-y-1 text-blue-700">
-            <li><a href="https://api.slack.com/apps" target="_blank" class="underline font-semibold">Slack API 사이트</a>에 접속 → <strong>Create New App</strong></li>
-            <li><strong>From scratch</strong> → 앱 이름 입력 → 워크스페이스 선택</li>
-            <li>좌측 <strong>Incoming Webhooks</strong> → <strong>Activate</strong> 토글 ON</li>
-            <li><strong>Add New Webhook to Workspace</strong> → 채널 선택</li>
-            <li>생성된 <strong>Webhook URL</strong>을 복사하여 아래에 붙여넣기</li>
-          </ol>
+        <div v-if="guideOpen.slack" class="px-6 py-4 bg-blue-50/50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed space-y-3">
+          <div class="space-y-1">
+            <p class="font-semibold">① Webhook URL 설정 (채널 알림용)</p>
+            <ol class="list-decimal list-inside space-y-1 text-blue-700 ml-2">
+              <li><a href="https://api.slack.com/apps" target="_blank" class="underline font-semibold">Slack API 사이트</a> 접속 → <strong>Create New App</strong> → From scratch</li>
+              <li>앱 이름 입력 → 워크스페이스 선택</li>
+              <li>좌측 <strong>Incoming Webhooks</strong> → <strong>Activate</strong> 토글 ON</li>
+              <li><strong>Add New Webhook to Workspace</strong> → 알림 받을 채널 선택</li>
+              <li>생성된 <strong>Webhook URL</strong>을 아래에 붙여넣기</li>
+            </ol>
+          </div>
+          <div class="space-y-1 border-t border-blue-100 pt-3">
+            <p class="font-semibold">② Bot Token 설정 (멤버 자동 매칭 · @멘션용)</p>
+            <ol class="list-decimal list-inside space-y-1 text-blue-700 ml-2">
+              <li>위에서 만든 Slack 앱 → 좌측 <strong>OAuth & Permissions</strong> 클릭</li>
+              <li><strong>Bot Token Scopes</strong> → <strong>Add an OAuth Scope</strong> 클릭 후
+                <code class="bg-blue-100 px-1 rounded mx-0.5">users:read</code>
+                <code class="bg-blue-100 px-1 rounded mx-0.5">users:read.email</code> 추가
+              </li>
+              <li>페이지 상단 <strong>Install to Workspace</strong> → 권한 허용</li>
+              <li>생성된 <strong>Bot User OAuth Token</strong>(<code class="bg-blue-100 px-1 rounded">xoxb-...</code>)을 아래에 입력</li>
+              <li><strong>사용자 자동 매칭</strong> 버튼 클릭 → 앱 사용자 ↔ Slack 멤버 이메일 자동 매칭</li>
+              <li class="text-blue-500">사용자 추가·변경 시 버튼을 다시 클릭하면 재매칭됩니다.</li>
+            </ol>
+          </div>
         </div>
         <div class="p-6 border-b border-gray-50">
           <label class="text-xs font-semibold text-gray-600 block mb-1">Slack Webhook URL</label>
@@ -72,6 +88,24 @@
             <button @click="saveSlack" class="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">저장</button>
           </div>
           <p v-if="slackTestResult" class="text-xs mt-2" :class="slackTestResult.ok ? 'text-green-600' : 'text-red-500'">{{ slackTestResult.message }}</p>
+        </div>
+
+        <!-- 슬랙 봇 토큰 + 사용자 자동 매칭 -->
+        <div class="p-6 border-b border-gray-50">
+          <label class="text-xs font-semibold text-gray-600 block mb-1">
+            슬랙 봇 토큰 <span class="font-normal text-gray-400">(검토 흐름 @멘션 알림용)</span>
+          </label>
+          <div class="flex gap-2">
+            <input v-model="slackBotToken" type="password"
+              class="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+              placeholder="xoxb-...">
+            <button @click="syncSlackUsers" :disabled="!slackBotToken || isSyncing"
+              class="bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition whitespace-nowrap">
+              {{ isSyncing ? '매칭 중...' : '사용자 자동 매칭' }}
+            </button>
+          </div>
+          <p v-if="syncResult" class="text-xs mt-2" :class="syncResult.ok ? 'text-green-600' : 'text-red-500'">{{ syncResult.message }}</p>
+          <p class="text-[11px] text-gray-400 mt-1.5">앱 사용자 이메일과 Slack 워크스페이스 멤버를 자동 매칭합니다. 사용자 변경 시 다시 클릭하세요.</p>
         </div>
 
         <!-- 슬랙 알림 메시지 템플릿 에디터 -->
@@ -460,6 +494,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { db } from '../firebase/config'
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore'
 import { useSettingsStore } from '../store/settings'
+import { fetchSlackWorkspaceUsers } from '../utils/slack'
 
 const settingsStore = useSettingsStore()
 
@@ -604,6 +639,9 @@ const orgName = ref('')
 const facilityType = ref('')
 const slackWebhookUrl = ref('')
 const slackTemplate = ref('')
+const slackBotToken = ref('')
+const isSyncing = ref(false)
+const syncResult = ref(null)
 const appsScriptUrl = ref('')
 const driveFolderId = ref('')
 const testingSlack = ref(false)
@@ -667,6 +705,7 @@ const loadSettings = async () => {
       facilityType.value = data.facilityType || ''
       slackWebhookUrl.value = data.slackWebhookUrl || ''
       slackTemplate.value = data.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {assigneeName}'
+      slackBotToken.value = data.slackBotToken || ''
       appsScriptUrl.value = data.appsScriptUrl || ''
       driveFolderId.value = data.driveFolderId || ''
     }
@@ -753,6 +792,57 @@ const testSlack = async () => {
     slackTestResult.value = { ok: false, message: '❌ 전송 실패. URL을 확인하세요.' }
   } finally {
     testingSlack.value = false
+  }
+}
+
+const syncSlackUsers = async () => {
+  if (!slackBotToken.value.trim()) {
+    alert('슬랙 봇 토큰을 먼저 입력하세요.')
+    return
+  }
+  isSyncing.value = true
+  syncResult.value = null
+  try {
+    // 1. Slack 워크스페이스 사용자 목록 조회
+    const slackUsers = await fetchSlackWorkspaceUsers(slackBotToken.value.trim())
+
+    // 2. 앱 등록 사용자 목록 조회 (전체, 비활성 포함)
+    const snap = await getDocs(collection(db, 'users'))
+    const appUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+    // 3. 이메일 기준 매칭 → { email: slackMemberId }
+    const memberMap = {}
+    let matchCount = 0
+    for (const appUser of appUsers) {
+      if (!appUser.email) continue
+      const slackUser = slackUsers.find(
+        m => m.profile?.email?.toLowerCase() === appUser.email.toLowerCase()
+      )
+      if (slackUser) {
+        memberMap[appUser.email] = slackUser.id
+        matchCount++
+      }
+    }
+
+    // 4. Firestore 저장
+    const orgRef = doc(db, 'settings', 'orgInfo')
+    const orgSnap = await getDoc(orgRef)
+    const existing = orgSnap.exists() ? orgSnap.data() : {}
+    await setDoc(orgRef, {
+      ...existing,
+      slackBotToken: slackBotToken.value.trim(),
+      slackMemberMap: memberMap
+    })
+    await settingsStore.loadSettings()
+
+    syncResult.value = {
+      ok: true,
+      message: `✅ ${appUsers.length}명 중 ${matchCount}명 매칭 완료 — 검토 알림 시 자동 멘션이 적용됩니다.`
+    }
+  } catch (e) {
+    syncResult.value = { ok: false, message: `❌ 오류: ${e.message}` }
+  } finally {
+    isSyncing.value = false
   }
 }
 
