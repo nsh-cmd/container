@@ -707,6 +707,11 @@ const approveReview = async (idx) => {
     if (!props.docData.reviewRequestedAt) updates.reviewRequestedAt = new Date()
     updates.status = idx === reviewSteps.length - 1 ? '완료' : '검토중'
     if (idx === reviewSteps.length - 1) updates.completedAt = new Date()
+    // 검토자가 담당자이기도 한 경우 assigneeReadAt 동시 업데이트
+    const userEmail = authStore.user?.email
+    if (userEmail && userEmail === props.docData.assigneeEmail && !props.docData.assigneeReadAt) {
+      updates.assigneeReadAt = new Date()
+    }
     await updateDoc(doc(db, 'documents', props.docData.id), updates)
     Object.assign(props.docData, updates)
     emit('updated')
