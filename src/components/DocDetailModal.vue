@@ -118,20 +118,33 @@
               <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>결재 검토 흐름
             </h4>
             <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-3">
-              <div v-for="step in docData.reviewSteps" :key="step.level" class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{{ step.level }}</div>
-                  <div>
-                    <p class="text-sm font-semibold text-slate-800">{{ stepTitle(step) }} <span class="text-xs font-normal text-slate-500 ml-1">({{ (step.name || '미지정').replace(/ *\(자동생략\)/, '') }})</span></p>
+              <div v-for="step in docData.reviewSteps" :key="step.level" class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">{{ step.level }}</div>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-800">{{ stepTitle(step) }} <span class="text-xs font-normal text-slate-500 ml-1">({{ (step.name || '미지정').replace(/ *\(자동생략\)/, '') }})</span></p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="isAutoSkipped(step) ? 'bg-amber-100 text-amber-700' : (step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'))">
+                      {{ isAutoSkipped(step) ? '검토생략' : (step.isApproved ? '승인 완료' : (step.isRead ? '확인 중' : '대기중')) }}
+                    </div>
+                    <p v-if="isAutoSkipped(step)" class="text-[10px] text-amber-600">검토 단계 자동 생략됨</p>
+                    <p v-else-if="step.isApproved && step.approvedAt" class="text-[10px] text-slate-400">승인: {{ formatDate(step.approvedAt) }}</p>
+                    <p v-else-if="step.isRead && step.readAt" class="text-[10px] text-slate-400">읽음: {{ formatDate(step.readAt) }}</p>
                   </div>
                 </div>
-                <div class="text-right">
-                  <div class="text-xs font-medium px-2.5 py-1 rounded-md inline-block mb-1" :class="isAutoSkipped(step) ? 'bg-amber-100 text-amber-700' : (step.isApproved ? 'bg-green-100 text-green-700' : (step.isRead ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'))">
-                    {{ isAutoSkipped(step) ? '검토생략' : (step.isApproved ? '승인 완료' : (step.isRead ? '확인 중' : '대기중')) }}
-                  </div>
-                  <p v-if="isAutoSkipped(step)" class="text-[10px] text-amber-600">검토 단계 자동 생략됨</p>
-                  <p v-else-if="step.isApproved && step.approvedAt" class="text-[10px] text-slate-400">승인: {{ formatDate(step.approvedAt) }}</p>
-                  <p v-else-if="step.isRead && step.readAt" class="text-[10px] text-slate-400">읽음: {{ formatDate(step.readAt) }}</p>
+                <!-- 승인 완료된 코멘트 표시 -->
+                <div v-if="step.isApproved && step.comment" class="ml-9 flex items-start gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-2">
+                  <span class="text-slate-400 text-xs mt-0.5">💬</span>
+                  <p class="text-xs text-slate-600 leading-relaxed">{{ step.comment }}</p>
+                </div>
+                <!-- 현재 검토자 코멘트 입력창 -->
+                <div v-if="step.email === currentUserEmail && canApproveReview && !step.isApproved && !isAutoSkipped(step)" class="ml-9">
+                  <textarea v-model="reviewComment" rows="2"
+                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none bg-white"
+                    placeholder="검토 의견을 남겨주세요 (선택 · 다음 검토자에게 전달됩니다)"></textarea>
                 </div>
               </div>
             </div>
@@ -361,6 +374,9 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'updated', 'deleted'])
 
+// ── 검토 코멘트 ──
+const reviewComment = ref('')
+
 // ── 편집 상태 ──
 const isEditing = ref(false)
 const isSaving = ref(false)
@@ -379,6 +395,7 @@ watch(() => props.show, async (val) => {
     isEditing.value = false
     newFiles.value = []
     removedAttachmentIndices.value = []
+    reviewComment.value = ''
     return
   }
   // 모달 열릴 때: 담당자=검토자인 경우 기존 문서 assigneeReadAt 소급 처리
@@ -720,6 +737,7 @@ const approveReview = async (idx) => {
     const reviewSteps = [...props.docData.reviewSteps]
     reviewSteps[idx].isApproved = true
     reviewSteps[idx].approvedAt = new Date()
+    if (reviewComment.value.trim()) reviewSteps[idx].comment = reviewComment.value.trim()
     const updates = { reviewSteps }
     if (!props.docData.reviewRequestedAt) updates.reviewRequestedAt = new Date()
     updates.status = idx === reviewSteps.length - 1 ? '완료' : '검토중'
@@ -731,6 +749,7 @@ const approveReview = async (idx) => {
     }
     await updateDoc(doc(db, 'documents', props.docData.id), updates)
     Object.assign(props.docData, updates)
+    reviewComment.value = ''
     emit('updated')
     await showAlert('승인 완료', '정상적으로 검토 및 승인 처리되었습니다.')
   } catch (e) {

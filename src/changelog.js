@@ -1,7 +1,16 @@
-export const APP_VERSION = '1.10.1'
+export const APP_VERSION = '1.10.2'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.2',
+    date: '2026.05.12',
+    changes: [
+      '검토 코멘트 기능: 검토자가 승인 시 의견을 입력하면 다음 검토자에게 전달',
+      '결재 검토 흐름에 코멘트 말풍선 표시 (승인 완료된 단계에 한함)',
+      '코멘트 입력창은 본인 차례 검토자에게만 표시, 승인과 함께 저장',
+    ]
+  },
   {
     version: '1.10.1',
     date: '2026.05.12',
