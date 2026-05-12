@@ -162,7 +162,7 @@ const assignDoc = async (docItem) => {
         text = text.replace(/{assigneeName}/g, docItem.selectedAssignee.name || '')
         text = text.replace(/{senderOrg}/g, docItem.senderOrg || '')
         const attachmentText = (docItem.attachments && docItem.attachments.length > 0)
-          ? docItem.attachments.map(f => f.name).join(', ')
+          ? docItem.attachments.map((f, i) => `  ${i + 1}. ${f.name}`).join('\n')
           : '첨부파일 없음'
         text = text.replace(/{attachments}/g, attachmentText)
         await fetch(settingsStore.slackWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), mode: 'no-cors' })

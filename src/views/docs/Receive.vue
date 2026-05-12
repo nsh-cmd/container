@@ -384,7 +384,9 @@ const submitDoc = async () => {
         text = text.replace(/{receiptNo}/g, docData.receiptNo || '')
         text = text.replace(/{assigneeName}/g, isAssigned ? docData.assigneeName : '미배정')
         text = text.replace(/{senderOrg}/g, docData.senderOrg || '')
-        const attachmentText = attachedFiles.value.length > 0 ? attachedFiles.value.map(f => f.name).join(', ') : '첨부파일 없음'
+        const attachmentText = attachedFiles.value.length > 0
+          ? attachedFiles.value.map((f, i) => `  ${i + 1}. ${f.name}`).join('\n')
+          : '첨부파일 없음'
         text = text.replace(/{attachments}/g, attachmentText)
         await fetch(settingsStore.slackWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), mode: 'no-cors' })
       } catch (e) { /* Slack 오류는 무시 */ }

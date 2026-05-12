@@ -1,7 +1,14 @@
-export const APP_VERSION = '1.10.4'
+export const APP_VERSION = '1.10.5'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.5',
+    date: '2026.05.12',
+    changes: [
+      'Slack 알림 첨부파일 표시 형식 개선: 쉼표 나열 → 번호 목록 세로 표시 (1. 파일명 형식)',
+    ]
+  },
   {
     version: '1.10.4',
     date: '2026.05.12',
