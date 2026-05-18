@@ -76,7 +76,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 import DocDetailModal from '../../components/DocDetailModal.vue'
 import { useSettingsStore } from '../../store/settings'
 import { applyAutoSkip, extractReviewerEmails } from '../../utils/docUtils'
-import { getAppLink } from '../../utils/slack'
+import { getAppLink, getSlackMention } from '../../utils/slack'
 
 const loading = ref(true)
 const docs = ref([])
@@ -157,10 +157,13 @@ const assignDoc = async (docItem) => {
     // 슬랙 알림
     if (settingsStore.slackWebhookUrl) {
       try {
-        let text = settingsStore.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {assigneeName}'
+        const assignee = docItem.selectedAssignee
+        const mention = getSlackMention(assignee.email, assignee.name, settingsStore.slackMemberMap)
+        let text = settingsStore.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {mention}'
         text = text.replace(/{title}/g, docItem.title || '')
         text = text.replace(/{receiptNo}/g, docItem.receiptNo || '')
-        text = text.replace(/{assigneeName}/g, docItem.selectedAssignee.name || '')
+        text = text.replace(/{assigneeName}/g, assignee.name || '')
+        text = text.replace(/{mention}/g, mention)
         text = text.replace(/{senderOrg}/g, docItem.senderOrg || '')
         const attachmentText = (docItem.attachments && docItem.attachments.length > 0)
           ? docItem.attachments.map((f, i) => `  ${i + 1}. ${f.name}`).join('\n')

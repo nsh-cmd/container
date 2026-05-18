@@ -117,6 +117,7 @@
               <div class="flex flex-wrap gap-2">
                 <button @click="insertVariable('{title}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {title}</button>
                 <button @click="insertVariable('{receiptNo}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {receiptNo}</button>
+                <button @click="insertVariable('{mention}')" class="px-2 py-1 bg-white border border-indigo-200 rounded text-xs font-mono text-indigo-600 hover:bg-indigo-50 transition" title="Slack @멘션 (사용자 자동 매칭 필요)">+ {mention} ✨</button>
                 <button @click="insertVariable('{assigneeName}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {assigneeName}</button>
                 <button @click="insertVariable('{senderOrg}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {senderOrg}</button>
                 <button @click="insertVariable('{attachments}')" class="px-2 py-1 bg-white border border-gray-200 rounded text-xs font-mono text-blue-600 hover:bg-blue-50 transition">+ {attachments}</button>
@@ -693,7 +694,7 @@ const loadSettings = async () => {
       orgName.value = data.name || ''
       facilityType.value = data.facilityType || ''
       slackWebhookUrl.value = data.slackWebhookUrl || ''
-      slackTemplate.value = data.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {assigneeName}'
+      slackTemplate.value = data.slackTemplate || '🔔 새로운 문서가 배정되었습니다!\n- 문서제목: {title}\n- 접수번호: {receiptNo}\n- 담당자: {mention}'
       slackBotToken.value = data.slackBotToken || ''
       appsScriptUrl.value = data.appsScriptUrl || ''
       driveFolderId.value = data.driveFolderId || ''
@@ -760,6 +761,7 @@ const previewSlackMessage = computed(() => {
   let text = slackTemplate.value || ''
   text = text.replace(/{title}/g, '2026년도 상반기 지침 안내')
   text = text.replace(/{receiptNo}/g, 'REC-0001')
+  text = text.replace(/{mention}/g, '@홍길동')
   text = text.replace(/{assigneeName}/g, '홍길동')
   text = text.replace(/{senderOrg}/g, '보건복지부')
   text = text.replace(/{attachments}/g, '안내문.pdf, 서식.hwp')

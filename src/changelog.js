@@ -1,7 +1,16 @@
-export const APP_VERSION = '1.10.8'
+export const APP_VERSION = '1.10.9'
 export const APP_VERSION_DATE = '2026.05.12'
 
 export const CHANGELOG = [
+  {
+    version: '1.10.9',
+    date: '2026.05.12',
+    changes: [
+      'Slack 배정 알림 @멘션 적용: {mention} 변수 추가 — 사용자 자동 매칭 시 실제 Slack @멘션, 미매칭 시 이름 텍스트 표시',
+      '기본 알림 템플릿 {assigneeName} → {mention} 으로 변경',
+      '알림 메시지 템플릿 변수 버튼에 {mention} ✨ 추가',
+    ]
+  },
   {
     version: '1.10.8',
     date: '2026.05.12',
